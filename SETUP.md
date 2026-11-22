@@ -16,8 +16,8 @@
 ## 🔄 Clone Repo
 
 ```bash
-git clone https://github.com/leonthanh/my-project-FIXED.git
-cd my-project-FIXED
+git clone https://github.com/leonthanh/thanhle.git
+cd thanhle
 ```
 
 ---
@@ -110,7 +110,7 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 ### Thêm Secrets vào GitHub
 
-1. Vào repo: `https://github.com/leonthanh/my-project-FIXED`
+1. Vào repo: `https://github.com/leonthanh/thanhle`
 2. Click **Settings** → **Secrets and variables** → **Actions**
 3. Click **"New repository secret"**
 4. Thêm các secrets mà `deploy.yml` hiện đang dùng:
@@ -179,7 +179,7 @@ OPENAI_API_KEY=your_openai_api_key_here
 #### **Khi vào chỗ làm (sáng hôm sau)**
 
 ```bash
-cd d:/web-app/my-project-FIXED
+cd d:/web-app/thanhle
 
 # LUÔN pull trước!
 git pull origin main
@@ -245,7 +245,7 @@ git push origin main
 ### Checklist deploy nhanh
 
 1. Merge PR bằng **Squash and merge** vào `main` hoặc push trực tiếp vào `main`.
-2. Vào `https://github.com/leonthanh/my-project-FIXED` → tab **Actions** → chờ workflow **Deploy to cPanel** chạy xong.
+2. Vào `https://github.com/leonthanh/thanhle` → tab **Actions** → chờ workflow **Deploy to cPanel** chạy xong.
 3. Nếu `backend/package.json` vừa đổi, cập nhật dependencies trên server bằng cPanel Terminal hoặc SSH.
 4. Đăng nhập cPanel → **Setup Node.js App** → chọn app → **Restart**.
 5. Smoke check `https://ix.star-siec.edu.vn` và `https://ix.star-siec.edu.vn/api/reading-tests`.
