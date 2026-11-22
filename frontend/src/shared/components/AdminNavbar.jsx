@@ -1306,7 +1306,7 @@ const AdminNavbar = () => {
         buildAdminLinkItem(
           "display-settings",
           "/admin/display-settings",
-          "Display Settings",
+          "Test Activity",
           true,
           "admin"
         ),

@@ -96,8 +96,8 @@ const buildBaseWorkspaceLinks = (navigate, currentKey, displayLabels) => {
 const buildAdminOnlyWorkspaceLinks = (navigate, currentKey) => [
   {
     key: "display-settings",
-    label: "Display",
-    hint: "Global labels",
+    label: "Test Activity",
+    hint: "Usage overview",
     tone: "blue",
     to: "/admin/display-settings",
     active: currentKey === "display-settings",

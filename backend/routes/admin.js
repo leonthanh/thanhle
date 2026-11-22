@@ -20,6 +20,8 @@ const GatewaySubmission = require('../models/GatewaySubmission');
 const GeneralListening = require('../models/GeneralListening');
 const GeneralReading = require('../models/GeneralReading');
 const GeneralSubmission = require('../models/GeneralSubmission');
+const ExamLevel = require('../models/ExamLevel');
+const ExamLevelSubmission = require('../models/ExamLevelSubmission');
 const AnalyticsEvent = require('../models/AnalyticsEvent');
 const { requireAuth, requireRole } = require('../middlewares/auth');
 const { logError } = require('../logger');
@@ -214,6 +216,67 @@ const getDayRangeWithOffset = (baseDate = new Date(), offsetMinutes = VIETNAM_OF
     dateLabel: `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
   };
 };
+
+const getMonthRangeWithOffset = (baseDate = new Date(), offsetMinutes = VIETNAM_OFFSET_MINUTES) => {
+  const offsetMs = offsetMinutes * 60 * 1000;
+  const shifted = new Date(baseDate.getTime() + offsetMs);
+  const year = shifted.getUTCFullYear();
+  const month = shifted.getUTCMonth();
+  const startMs = Date.UTC(year, month, 1, 0, 0, 0, 0) - offsetMs;
+
+  return {
+    start: new Date(startMs),
+    monthLabel: `${year}-${String(month + 1).padStart(2, '0')}`,
+  };
+};
+
+const isDateInRange = (value, start, end) => {
+  const timestamp = value instanceof Date ? value.getTime() : new Date(value).getTime();
+  return Number.isFinite(timestamp) && timestamp >= start.getTime() && timestamp <= end.getTime();
+};
+
+const isBooleanTrue = (value) =>
+  value === true || value === 1 || value === '1' || String(value).toLowerCase() === 'true';
+
+const isBooleanFalse = (value) =>
+  value === false || value === 0 || value === '0' || String(value).toLowerCase() === 'false';
+
+const buildWritingSubmissionWhere = (start, end) => ({
+  [Op.and]: [
+    { [Op.or]: [{ isDraft: false }, { isDraft: null }] },
+    {
+      [Op.or]: [
+        { submittedAt: { [Op.between]: [start, end] } },
+        {
+          [Op.and]: [
+            { submittedAt: null },
+            { createdAt: { [Op.between]: [start, end] } },
+          ],
+        },
+      ],
+    },
+  ],
+});
+
+const buildFinishedSubmissionWhere = (start, end) => ({
+  createdAt: { [Op.between]: [start, end] },
+  [Op.or]: [{ finished: true }, { finished: null }],
+});
+
+const buildPrepareSubmissionWhere = (levelId, start, end) => ({
+  levelId,
+  status: { [Op.ne]: 'archived' },
+  finished: true,
+  [Op.or]: [
+    { submittedAt: { [Op.between]: [start, end] } },
+    {
+      [Op.and]: [
+        { submittedAt: null },
+        { createdAt: { [Op.between]: [start, end] } },
+      ],
+    },
+  ],
+});
 
 const normalizeIdentityText = (value = '') => String(value || '').trim().toLowerCase();
 
@@ -604,6 +667,13 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
     const now = new Date();
     const liveWindowStart = new Date(now.getTime() - LIVE_ACTIVITY_WINDOW_MINUTES * 60 * 1000);
     const { start: todayStart, end: todayEnd, dateLabel } = getDayRangeWithOffset(now);
+    const { start: monthStart, monthLabel } = getMonthRangeWithOffset(now);
+    const prepareLevel = await ExamLevel.findOne({
+      where: { code: 'prepare' },
+      attributes: ['id'],
+      raw: true,
+    });
+    const prepareLevelId = Number(prepareLevel?.id) || null;
 
     const liveWritingDraftWhere = {
       isDraft: true,
@@ -621,24 +691,41 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
       ],
     };
 
+    const monthActivityWhere = {
+      updatedAt: { [Op.between]: [monthStart, now] },
+    };
+
     const [
       liveWritingDrafts,
       liveReadingSessions,
       liveListeningSessions,
       liveCambridgeSessions,
+      liveGatewaySessions,
       liveGeneralSessions,
+      livePrepareSessions,
       liveVisitorEvents,
-      todayWritingActivity,
-      todayReadingActivity,
-      todayListeningActivity,
-      todayCambridgeActivity,
-      todayGeneralActivity,
+      monthWritingActivity,
+      monthReadingActivity,
+      monthListeningActivity,
+      monthCambridgeActivity,
+      monthGatewayActivity,
+      monthGeneralActivity,
+      monthPrepareActivity,
       todayVisitorEvents,
       todayWritingSubmissions,
       todayReadingSubmissions,
       todayListeningSubmissions,
       todayCambridgeSubmissions,
+      todayGatewaySubmissions,
       todayGeneralSubmissions,
+      todayPrepareSubmissions,
+      monthWritingSubmissions,
+      monthReadingSubmissions,
+      monthListeningSubmissions,
+      monthCambridgeSubmissions,
+      monthGatewaySubmissions,
+      monthGeneralSubmissions,
+      monthPrepareSubmissions,
       todayNewStudents,
     ] = await Promise.all([
       Submission.findAll({
@@ -661,11 +748,23 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
         attributes: ['id', 'userId', 'studentPhone', 'studentName'],
         raw: true,
       }),
+      GatewaySubmission.findAll({
+        where: liveRuntimeWhere,
+        attributes: ['id', 'userId', 'studentPhone', 'studentName'],
+        raw: true,
+      }),
       GeneralSubmission.findAll({
         where: liveRuntimeWhere,
         attributes: ['id', 'userId', 'studentPhone', 'studentName'],
         raw: true,
       }),
+      prepareLevelId
+        ? ExamLevelSubmission.findAll({
+            where: { ...liveRuntimeWhere, levelId: prepareLevelId },
+            attributes: ['id', 'userId', 'studentPhone', 'studentName'],
+            raw: true,
+          })
+        : Promise.resolve([]),
       AnalyticsEvent.findAll({
         where: {
           createdAt: { [Op.gte]: liveWindowStart },
@@ -675,40 +774,42 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
         raw: true,
       }),
       Submission.findAll({
-        where: {
-          updatedAt: { [Op.between]: [todayStart, todayEnd] },
-        },
-        attributes: ['id', 'userId', 'userPhone', 'userName'],
+        where: monthActivityWhere,
+        attributes: ['id', 'userId', 'userPhone', 'userName', 'isDraft', 'submittedAt', 'createdAt', 'updatedAt'],
         raw: true,
       }),
       ReadingSubmission.findAll({
-        where: {
-          updatedAt: { [Op.between]: [todayStart, todayEnd] },
-        },
-        attributes: ['id', 'userId', 'userName'],
+        where: monthActivityWhere,
+        attributes: ['id', 'userId', 'userName', 'finished', 'createdAt', 'updatedAt'],
         raw: true,
       }),
       ListeningSubmission.findAll({
-        where: {
-          updatedAt: { [Op.between]: [todayStart, todayEnd] },
-        },
-        attributes: ['id', 'userId', 'userName'],
+        where: monthActivityWhere,
+        attributes: ['id', 'userId', 'userName', 'finished', 'createdAt', 'updatedAt'],
         raw: true,
       }),
       CambridgeSubmission.findAll({
-        where: {
-          updatedAt: { [Op.between]: [todayStart, todayEnd] },
-        },
-        attributes: ['id', 'userId', 'studentPhone', 'studentName'],
+        where: monthActivityWhere,
+        attributes: ['id', 'userId', 'studentPhone', 'studentName', 'finished', 'createdAt', 'updatedAt'],
+        raw: true,
+      }),
+      GatewaySubmission.findAll({
+        where: monthActivityWhere,
+        attributes: ['id', 'userId', 'studentPhone', 'studentName', 'finished', 'createdAt', 'updatedAt'],
         raw: true,
       }),
       GeneralSubmission.findAll({
-        where: {
-          updatedAt: { [Op.between]: [todayStart, todayEnd] },
-        },
-        attributes: ['id', 'userId', 'studentPhone', 'studentName'],
+        where: monthActivityWhere,
+        attributes: ['id', 'userId', 'studentPhone', 'studentName', 'finished', 'createdAt', 'updatedAt'],
         raw: true,
       }),
+      prepareLevelId
+        ? ExamLevelSubmission.findAll({
+            where: { ...monthActivityWhere, levelId: prepareLevelId },
+            attributes: ['id', 'userId', 'studentPhone', 'studentName', 'finished', 'status', 'submittedAt', 'createdAt', 'updatedAt'],
+            raw: true,
+          })
+        : Promise.resolve([]),
       AnalyticsEvent.findAll({
         where: {
           createdAt: { [Op.between]: [todayStart, todayEnd] },
@@ -718,47 +819,51 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
         raw: true,
       }),
       Submission.count({
-        where: {
-          [Op.and]: [
-            { [Op.or]: [{ isDraft: false }, { isDraft: null }] },
-            {
-              [Op.or]: [
-                { submittedAt: { [Op.between]: [todayStart, todayEnd] } },
-                {
-                  [Op.and]: [
-                    { submittedAt: null },
-                    { createdAt: { [Op.between]: [todayStart, todayEnd] } },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
+        where: buildWritingSubmissionWhere(todayStart, todayEnd),
       }),
       ReadingSubmission.count({
-        where: {
-          createdAt: { [Op.between]: [todayStart, todayEnd] },
-          [Op.or]: [{ finished: true }, { finished: null }],
-        },
+        where: buildFinishedSubmissionWhere(todayStart, todayEnd),
       }),
       ListeningSubmission.count({
-        where: {
-          createdAt: { [Op.between]: [todayStart, todayEnd] },
-          [Op.or]: [{ finished: true }, { finished: null }],
-        },
+        where: buildFinishedSubmissionWhere(todayStart, todayEnd),
       }),
       CambridgeSubmission.count({
-        where: {
-          createdAt: { [Op.between]: [todayStart, todayEnd] },
-          [Op.or]: [{ finished: true }, { finished: null }],
-        },
+        where: buildFinishedSubmissionWhere(todayStart, todayEnd),
+      }),
+      GatewaySubmission.count({
+        where: buildFinishedSubmissionWhere(todayStart, todayEnd),
       }),
       GeneralSubmission.count({
-        where: {
-          createdAt: { [Op.between]: [todayStart, todayEnd] },
-          [Op.or]: [{ finished: true }, { finished: null }],
-        },
+        where: buildFinishedSubmissionWhere(todayStart, todayEnd),
       }),
+      prepareLevelId
+        ? ExamLevelSubmission.count({
+            where: buildPrepareSubmissionWhere(prepareLevelId, todayStart, todayEnd),
+          })
+        : Promise.resolve(0),
+      Submission.count({
+        where: buildWritingSubmissionWhere(monthStart, now),
+      }),
+      ReadingSubmission.count({
+        where: buildFinishedSubmissionWhere(monthStart, now),
+      }),
+      ListeningSubmission.count({
+        where: buildFinishedSubmissionWhere(monthStart, now),
+      }),
+      CambridgeSubmission.count({
+        where: buildFinishedSubmissionWhere(monthStart, now),
+      }),
+      GatewaySubmission.count({
+        where: buildFinishedSubmissionWhere(monthStart, now),
+      }),
+      GeneralSubmission.count({
+        where: buildFinishedSubmissionWhere(monthStart, now),
+      }),
+      prepareLevelId
+        ? ExamLevelSubmission.count({
+            where: buildPrepareSubmissionWhere(prepareLevelId, monthStart, now),
+          })
+        : Promise.resolve(0),
       User.count({
         where: {
           role: 'student',
@@ -772,14 +877,94 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
     addRecordsToIdentitySet(liveUsers, liveReadingSessions, 'reading-runtime');
     addRecordsToIdentitySet(liveUsers, liveListeningSessions, 'listening-runtime');
     addRecordsToIdentitySet(liveUsers, liveCambridgeSessions, 'cambridge-runtime');
+    addRecordsToIdentitySet(liveUsers, liveGatewaySessions, 'gateway-runtime');
     addRecordsToIdentitySet(liveUsers, liveGeneralSessions, 'general-runtime');
+    addRecordsToIdentitySet(liveUsers, livePrepareSessions, 'prepare-runtime');
+
+    const activityGroups = [
+      {
+        key: 'writing',
+        records: monthWritingActivity,
+        fallbackPrefix: 'writing-activity',
+        isSubmitted: (record) => !isBooleanTrue(record?.isDraft),
+        getSubmissionDate: (record) => record?.submittedAt || record?.createdAt,
+      },
+      {
+        key: 'reading',
+        records: monthReadingActivity,
+        fallbackPrefix: 'reading-activity',
+        isSubmitted: (record) => !isBooleanFalse(record?.finished),
+        getSubmissionDate: (record) => record?.createdAt,
+      },
+      {
+        key: 'listening',
+        records: monthListeningActivity,
+        fallbackPrefix: 'listening-activity',
+        isSubmitted: (record) => !isBooleanFalse(record?.finished),
+        getSubmissionDate: (record) => record?.createdAt,
+      },
+      {
+        key: 'cambridge',
+        records: monthCambridgeActivity,
+        fallbackPrefix: 'cambridge-activity',
+        isSubmitted: (record) => !isBooleanFalse(record?.finished),
+        getSubmissionDate: (record) => record?.createdAt,
+      },
+      {
+        key: 'gateway',
+        records: monthGatewayActivity,
+        fallbackPrefix: 'gateway-activity',
+        isSubmitted: (record) => !isBooleanFalse(record?.finished),
+        getSubmissionDate: (record) => record?.createdAt,
+      },
+      {
+        key: 'general',
+        records: monthGeneralActivity,
+        fallbackPrefix: 'general-activity',
+        isSubmitted: (record) => !isBooleanFalse(record?.finished),
+        getSubmissionDate: (record) => record?.createdAt,
+      },
+      {
+        key: 'prepare',
+        records: monthPrepareActivity,
+        fallbackPrefix: 'prepare-activity',
+        isSubmitted: (record) => isBooleanTrue(record?.finished) && record?.status !== 'archived',
+        getSubmissionDate: (record) => record?.submittedAt || record?.createdAt,
+      },
+    ];
 
     const todayUsers = new Set();
-    addRecordsToIdentitySet(todayUsers, todayWritingActivity, 'writing-activity');
-    addRecordsToIdentitySet(todayUsers, todayReadingActivity, 'reading-activity');
-    addRecordsToIdentitySet(todayUsers, todayListeningActivity, 'listening-activity');
-    addRecordsToIdentitySet(todayUsers, todayCambridgeActivity, 'cambridge-activity');
-    addRecordsToIdentitySet(todayUsers, todayGeneralActivity, 'general-activity');
+    const monthUsers = new Set();
+    const todaySubmitters = new Set();
+    const monthSubmitters = new Set();
+    const todayUsersByType = {};
+    const monthUsersByType = {};
+    activityGroups.forEach(({ key, records, fallbackPrefix, isSubmitted, getSubmissionDate }) => {
+      const usersTodayByType = new Set();
+      const usersMonthByType = new Set();
+      (Array.isArray(records) ? records : []).forEach((record) => {
+        const identity = buildIdentityKey(record, fallbackPrefix);
+        if (isDateInRange(record?.updatedAt, monthStart, now)) {
+          monthUsers.add(identity);
+          usersMonthByType.add(identity);
+        }
+        if (isDateInRange(record?.updatedAt, todayStart, todayEnd)) {
+          todayUsers.add(identity);
+          usersTodayByType.add(identity);
+        }
+
+        if (!isSubmitted(record)) return;
+        const submissionDate = getSubmissionDate(record);
+        if (isDateInRange(submissionDate, monthStart, now)) {
+          monthSubmitters.add(identity);
+        }
+        if (isDateInRange(submissionDate, todayStart, todayEnd)) {
+          todaySubmitters.add(identity);
+        }
+      });
+      todayUsersByType[key] = usersTodayByType.size;
+      monthUsersByType[key] = usersMonthByType.size;
+    });
 
     const liveVisitors = new Set();
     (liveVisitorEvents || []).forEach((event) => {
@@ -807,7 +992,9 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
       reading: countRows(liveReadingSessions),
       listening: countRows(liveListeningSessions),
       cambridge: countRows(liveCambridgeSessions),
+      gateway: countRows(liveGatewaySessions),
       general: countRows(liveGeneralSessions),
+      prepare: countRows(livePrepareSessions),
     };
 
     const submissionsByType = {
@@ -815,7 +1002,18 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
       reading: Number(todayReadingSubmissions || 0),
       listening: Number(todayListeningSubmissions || 0),
       cambridge: Number(todayCambridgeSubmissions || 0),
+      gateway: Number(todayGatewaySubmissions || 0),
       general: Number(todayGeneralSubmissions || 0),
+      prepare: Number(todayPrepareSubmissions || 0),
+    };
+    const monthSubmissionsByType = {
+      writing: Number(monthWritingSubmissions || 0),
+      reading: Number(monthReadingSubmissions || 0),
+      listening: Number(monthListeningSubmissions || 0),
+      cambridge: Number(monthCambridgeSubmissions || 0),
+      gateway: Number(monthGatewaySubmissions || 0),
+      general: Number(monthGeneralSubmissions || 0),
+      prepare: Number(monthPrepareSubmissions || 0),
     };
 
     const activeTestSessions = Object.values(liveSessionsByType).reduce(
@@ -823,6 +1021,10 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
       0
     );
     const todaySubmissionTotal = Object.values(submissionsByType).reduce(
+      (sum, value) => sum + Number(value || 0),
+      0
+    );
+    const monthSubmissionTotal = Object.values(monthSubmissionsByType).reduce(
       (sum, value) => sum + Number(value || 0),
       0
     );
@@ -841,11 +1043,21 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
         date: dateLabel,
         activeUsers: todayVisitors.size,
         usersInTests: todayUsers.size,
+        usersByType: todayUsersByType,
+        submitters: todaySubmitters.size,
         submissions: todaySubmissionTotal,
         submissionsByType,
         pageViews: todayPageViews,
         heartbeats: todayHeartbeats,
         newStudentAccounts: Number(todayNewStudents || 0),
+      },
+      month: {
+        date: monthLabel,
+        usersInTests: monthUsers.size,
+        usersByType: monthUsersByType,
+        submitters: monthSubmitters.size,
+        submissions: monthSubmissionTotal,
+        submissionsByType: monthSubmissionsByType,
       },
     });
   } catch (err) {
