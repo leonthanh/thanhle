@@ -12,6 +12,7 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const pinoHttp = require('pino-http');
 const { Op } = require('sequelize');
+const { getProgressReportCspHashes } = require('./utils/progressReportCsp');
 
 const loggerModule = require('./logger');
 const logger = loggerModule?.logger || loggerModule?.default || loggerModule || console;
@@ -430,6 +431,7 @@ app.use(
       directives: {
         "script-src": [
           "'self'",
+          ...getProgressReportCspHashes(),
           'https://accounts.google.com',
           'https://connect.facebook.net',
           'https://www.facebook.com',
