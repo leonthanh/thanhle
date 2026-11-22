@@ -96,10 +96,19 @@ jobs:
         run: |
           set -e
           cd backend
-          # Include backend files and both backend/utils and repo-root utils so helpers like readingScorer are deployed
+          # Include backend code and the private report templates; root utils are copied during deploy preparation below.
           zip -r ../backend-artifact.zip \
-            server.js db.js logger.js routes models middlewares modules scripts package.json package-lock.json \
-            utils ../utils || true
+            server.js db.js logger.js routes models middlewares modules scripts \
+            private package.json package-lock.json utils
+          archive_listing="$(unzip -Z1 ../backend-artifact.zip)"
+          for report in \
+            private/progress-reports/progress-report.html \
+            private/progress-reports/ielts-progress-report.html; do
+            if ! grep -Fxq "$report" <<< "$archive_listing"; then
+              echo "::error::Backend artifact is missing required progress report: $report"
+              exit 1
+            fi
+          done
       - name: Upload artifacts
         if: steps.detect.outputs.frontend_changed == 'true' || steps.detect.outputs.backend_changed == 'true'
         uses: actions/upload-artifact@v7
