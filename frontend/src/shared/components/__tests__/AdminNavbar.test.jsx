@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import AdminNavbar from '../AdminNavbar';
 
@@ -92,6 +92,94 @@ describe('AdminNavbar auth sync', () => {
     expect(prepareButton).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('dialog', { name: 'Prepare menu' })).toBeInTheDocument();
     expect(screen.getByText('Prepare submissions')).toBeInTheDocument();
+  });
+
+  test('uses the vertical navigation drawer at tablet widths and shows teacher sections', async () => {
+    const originalWidth = window.innerWidth;
+    window.innerWidth = 900;
+    getStoredUser.mockReturnValue({
+      id: 10,
+      name: 'Teacher',
+      role: 'teacher',
+      canManageTests: true,
+    });
+
+    const { unmount } = render(
+      <MemoryRouter initialEntries={['/admin/progress-reports']}>
+        <AdminNavbar />
+      </MemoryRouter>
+    );
+
+    try {
+      fireEvent.click(await screen.findByRole('button', { name: 'Open menu' }));
+      const drawer = await screen.findByRole('dialog');
+
+      for (const section of ['Review', 'IX', 'Gateway', 'Prepare', 'Orange', 'General', 'Overview']) {
+        expect(within(drawer).getByRole('button', { name: section })).toBeInTheDocument();
+      }
+
+      expect(within(drawer).queryByRole('button', { name: 'Admin' })).not.toBeInTheDocument();
+      expect(within(drawer).getByRole('link', { name: /Progress Reports/ })).toHaveAttribute(
+        'href',
+        '/admin/progress-reports'
+      );
+    } finally {
+      unmount();
+      window.innerWidth = originalWidth;
+    }
+  });
+
+  test('hides the Prepare quick link from Overview but keeps the main Prepare section', async () => {
+    const originalWidth = window.innerWidth;
+    window.innerWidth = 900;
+    getStoredUser.mockReturnValue({
+      id: 11,
+      name: 'Teacher',
+      role: 'teacher',
+      canManageTests: true,
+    });
+    global.fetch = jest.fn((url) => {
+      if (String(url).includes('exam-levels')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => [
+            { code: 'prepare', name: 'Prepare' },
+            { code: 'gateway', name: 'Gateway' },
+          ],
+        });
+      }
+
+      if (String(url).includes('cambridge/submissions')) {
+        return Promise.resolve({ ok: true, json: async () => ({ submissions: [] }) });
+      }
+
+      return Promise.resolve({ ok: true, json: async () => [] });
+    });
+
+    const { unmount } = render(
+      <MemoryRouter initialEntries={['/admin/progress-reports']}>
+        <AdminNavbar />
+      </MemoryRouter>
+    );
+
+    try {
+      fireEvent.click(await screen.findByRole('button', { name: 'Open menu' }));
+      const drawer = await screen.findByRole('dialog');
+      expect(within(drawer).getByRole('button', { name: 'Prepare' })).toBeInTheDocument();
+      expect(
+        await within(drawer).findByRole('link', {
+          name: /Open Gateway tests and submissions/,
+        })
+      ).toHaveAttribute('href', '/exam-levels/gateway');
+      expect(
+        within(drawer).queryByRole('link', {
+          name: /Open Prepare tests and submissions/,
+        })
+      ).not.toBeInTheDocument();
+    } finally {
+      unmount();
+      window.innerWidth = originalWidth;
+    }
   });
 
   test('shows pending notifications only for tests created by the current teacher', async () => {

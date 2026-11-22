@@ -8,6 +8,8 @@ import { fetchAdminSubmissionJson } from "../utils/adminSubmissionRequests";
 import { useDisplaySettings } from "../contexts/DisplaySettingsContext";
 import "./AdminNavbar.css";
 
+const COMPACT_NAVBAR_BREAKPOINT = 900;
+
 const NavIcon = ({ name }) => {
   const sharedProps = {
     viewBox: "0 0 24 24",
@@ -387,7 +389,7 @@ const AdminNavbar = () => {
   const [expandedNotificationGroups, setExpandedNotificationGroups] = useState({});
   const [adminDropdownVisible, setAdminDropdownVisible] = useState(false);
   const [isCompactMenu, setIsCompactMenu] = useState(
-    typeof window !== "undefined" ? window.innerWidth <= 768 : false
+    typeof window !== "undefined" ? window.innerWidth <= COMPACT_NAVBAR_BREAKPOINT : false
   );
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [mobileDrawerTab, setMobileDrawerTab] = useState("overview");
@@ -659,7 +661,7 @@ const AdminNavbar = () => {
     if (typeof window === "undefined") return undefined;
 
     const handleResize = () => {
-      const compact = window.innerWidth <= 768;
+      const compact = window.innerWidth <= COMPACT_NAVBAR_BREAKPOINT;
       setIsCompactMenu(compact);
       if (!compact) {
         setMobileDrawerOpen(false);
@@ -2205,14 +2207,16 @@ const AdminNavbar = () => {
                 "review"
               )
             : null}
-          {examLevels.map((level) =>
-            renderMobileQuickLink(
-              `/exam-levels/${encodeURIComponent(level.code)}`,
-              level.name,
-              `Open ${level.name} tests and submissions`,
-              "tests"
-            )
-          )}
+          {examLevels
+            .filter((level) => String(level.code || "").toLowerCase() !== "prepare")
+            .map((level) =>
+              renderMobileQuickLink(
+                `/exam-levels/${encodeURIComponent(level.code)}`,
+                level.name,
+                `Open ${level.name} tests and submissions`,
+                "tests"
+              )
+            )}
         </div>
 
         <div className="adminNavbar__mobileSectionTitle">Account</div>

@@ -28,9 +28,14 @@
   display: flex;
   align-items: center;
   flex: 1 1 auto;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   min-width: 0;
   gap: 8px;
+  row-gap: 6px;
+}
+
+.adminNavbar__left > * {
+  flex: 0 0 auto;
 }
 
 .adminNavbar__logoLink {
@@ -443,9 +448,15 @@
   color: #111827;
   z-index: 2100;
   box-shadow: 18px 0 48px rgba(15, 23, 42, 0.28);
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   animation: adminNavbarDrawerIn 0.28s ease;
+}
+
+.adminNavbar__drawerPanel,
+.adminNavbar__drawerPanel * {
+  box-sizing: border-box;
 }
 
 .adminNavbar__drawerHeader {
@@ -765,10 +776,9 @@
 .adminNavbar__mobileSubTabs {
   display: flex;
   gap: 8px;
-  overflow-x: auto;
+  overflow: visible;
   padding: 12px 14px;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
+  flex-wrap: wrap;
 }
 
 .adminNavbar__mobileTabs::-webkit-scrollbar,
@@ -777,22 +787,29 @@
 }
 
 .adminNavbar__mobileTabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   border-bottom: 1px solid #eef2f7;
-  scroll-padding-inline: 14px;
 }
 
 .adminNavbar__mobileTab,
 .adminNavbar__mobileSubTab {
-  flex: 0 0 auto;
+  min-width: 0;
   border: none;
   border-radius: 999px;
   padding: 8px 12px;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: center;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .adminNavbar__mobileTab {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: #e8efff;
   color: #294172;
   font-size: 13px;
@@ -801,6 +818,7 @@
 }
 
 .adminNavbar__mobileSubTab {
+  flex: 0 0 auto;
   background: #f8fafc;
   color: #475569;
   font-size: 12px;
@@ -1449,7 +1467,10 @@
     align-items: center;
   }
 
-  .adminNavbar__left,
+  .adminNavbar__left {
+    flex-wrap: wrap;
+  }
+
   .adminNavbar__right {
     flex-wrap: nowrap;
   }
@@ -1492,7 +1513,10 @@
     align-items: center;
   }
 
-  .adminNavbar__left,
+  .adminNavbar__left {
+    flex-wrap: wrap;
+  }
+
   .adminNavbar__right {
     flex-wrap: nowrap;
   }
@@ -1591,8 +1615,32 @@
     padding: 7px 10px;
   }
 
+  .adminNavbar__mobileQuickGrid {
+    gap: 8px;
+  }
+
+  .adminNavbar__mobileQuickLink {
+    min-height: 48px;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .adminNavbar__mobileQuickIcon {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+  }
+
+  .adminNavbar__mobileQuickMeta {
+    display: none;
+  }
+
   .adminNavbar__drawerHeader {
     padding: 14px 14px 12px;
+  }
+
+  .adminNavbar__drawerPanel {
+    width: 100vw;
   }
 
   .adminNavbar__drawerBrandMeta {
@@ -1648,20 +1696,13 @@
   .adminNavbar__left,
   .adminNavbar__right {
     gap: 6px;
-    flex-wrap: nowrap;
   }
 
   .adminNavbar__left {
     flex: 1 1 auto;
     min-width: 0;
-    overflow-x: auto;
-    overflow-y: visible;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-
-  .adminNavbar__left::-webkit-scrollbar {
-    display: none;
+    flex-wrap: wrap;
+    overflow: visible;
   }
 
   .adminNavbar__right {
