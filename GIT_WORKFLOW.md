@@ -75,8 +75,8 @@ Tuyệt! Bạn đã push thành công và PR đã tạo trên GitHub. Để ti�
 
 ### Chuẩn bị ở PC nhà:
 1. **Mở terminal/command prompt** trên PC nhà, cd vào thư mục dự án (hoặc clone nếu chưa có):
-   - Nếu đã có repo: `cd /path/to/my-project-FIXED`
-   - Nếu chưa có: `git clone https://github.com/leonthanh/my-project-FIXED.git` (dùng HTTPS hoặc SSH nếu đã setup).
+   - Nếu đã có repo: `cd /path/to/thanhle`
+   - Nếu chưa có: `git clone https://github.com/leonthanh/thanhle.git` (dùng HTTPS hoặc SSH nếu đã setup).
 
 2. **Sync với remote** (để lấy code mới nhất từ GitHub):
    ```
