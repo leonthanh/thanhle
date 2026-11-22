@@ -94,6 +94,75 @@ describe('AdminNavbar auth sync', () => {
     expect(screen.getByText('Prepare submissions')).toBeInTheDocument();
   });
 
+  test('switches the desktop General drawer between Create and Submissions', async () => {
+    const originalWidth = window.innerWidth;
+    window.innerWidth = 1280;
+    getStoredUser.mockReturnValue({
+      id: 12,
+      name: 'Teacher',
+      role: 'teacher',
+      canManageTests: true,
+    });
+
+    const { unmount } = render(
+      <MemoryRouter initialEntries={['/admin/general-submissions']}>
+        <AdminNavbar />
+      </MemoryRouter>
+    );
+
+    try {
+      fireEvent.click(await screen.findByTitle('General'));
+      const drawer = await screen.findByRole('dialog', { name: 'General menu' });
+
+      fireEvent.click(within(drawer).getByRole('button', { name: 'Create' }));
+      expect(
+        within(drawer).getByRole('link', { name: /Reading & Writing/ })
+      ).toHaveAttribute('href', '/admin/create-general-reading');
+      expect(
+        within(drawer).getByRole('link', { name: 'Listening' })
+      ).toHaveAttribute('href', '/admin/create-general-listening');
+
+      fireEvent.click(within(drawer).getByRole('button', { name: 'Submissions' }));
+      expect(
+        within(drawer).getByRole('link', { name: 'View submissions' })
+      ).toHaveAttribute('href', '/admin/general-submissions');
+    } finally {
+      unmount();
+      window.innerWidth = originalWidth;
+    }
+  });
+
+  test('shows General submissions when switching tabs in the mobile drawer', async () => {
+    const originalWidth = window.innerWidth;
+    window.innerWidth = 900;
+    getStoredUser.mockReturnValue({
+      id: 13,
+      name: 'Teacher',
+      role: 'teacher',
+      canManageTests: true,
+    });
+
+    const { unmount } = render(
+      <MemoryRouter initialEntries={['/admin/progress-reports']}>
+        <AdminNavbar />
+      </MemoryRouter>
+    );
+
+    try {
+      fireEvent.click(await screen.findByRole('button', { name: 'Open menu' }));
+      const drawer = await screen.findByRole('dialog');
+      fireEvent.click(within(drawer).getByRole('button', { name: 'General' }));
+      fireEvent.click(within(drawer).getByRole('button', { name: 'Submissions' }));
+
+      expect(
+        within(drawer).getByRole('link', { name: 'View submissions' })
+      ).toHaveAttribute('href', '/admin/general-submissions');
+    } finally {
+      unmount();
+      window.innerWidth = originalWidth;
+    }
+  });
+
   test('uses the vertical navigation drawer at tablet widths and shows teacher sections', async () => {
     const originalWidth = window.innerWidth;
     window.innerWidth = 900;

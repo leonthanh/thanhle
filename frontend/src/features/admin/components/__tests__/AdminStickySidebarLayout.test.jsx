@@ -1,8 +1,16 @@
+import React from "react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { preloadAdminRoute } from "../../../../shared/utils/adminRoutePreloaders";
 import {
+  AdminSidebarNavList,
   buildAdminWorkspaceLinks,
   buildReviewWorkspaceNav,
   buildSubmissionWorkspaceNav,
 } from "../AdminStickySidebarLayout";
+
+jest.mock("../../../../shared/utils/adminRoutePreloaders", () => ({
+  preloadAdminRoute: jest.fn(),
+}));
 
 describe("buildAdminWorkspaceLinks", () => {
   test("omits admin-only links for teachers", () => {
@@ -97,6 +105,45 @@ describe("buildAdminWorkspaceLinks", () => {
     expect(setActiveWorkspaceGroup).toHaveBeenCalledWith("prepare");
     expect(navigate).toHaveBeenCalledWith("/prepare/submissions");
     expect(onPrepareSkillClick).toHaveBeenCalledWith("listening");
+  });
+});
+
+describe("AdminSidebarNavList route preloading", () => {
+  test("preloads the target route before a sidebar item is activated", () => {
+    const nav = buildSubmissionWorkspaceNav({
+      navigate: jest.fn(),
+      currentKey: "general",
+      activeWorkspaceGroup: "general",
+      setActiveWorkspaceGroup: jest.fn(),
+    });
+    const generalLink = nav.workspaceGroupLinks.find(
+      (item) => item.key === "workspace-general"
+    );
+
+    render(
+      <AdminSidebarNavList
+        items={[generalLink]}
+        ariaLabel="Submission workspace"
+      />
+    );
+
+    const button = screen.getByRole("button", { name: /General/ });
+    fireEvent.mouseEnter(button);
+    fireEvent.focus(button);
+    fireEvent.pointerDown(button);
+
+    expect(preloadAdminRoute).toHaveBeenNthCalledWith(
+      1,
+      "/admin/general-submissions"
+    );
+    expect(preloadAdminRoute).toHaveBeenNthCalledWith(
+      2,
+      "/admin/general-submissions"
+    );
+    expect(preloadAdminRoute).toHaveBeenNthCalledWith(
+      3,
+      "/admin/general-submissions"
+    );
   });
 });
 

@@ -2,6 +2,7 @@ import React from "react";
 import { useTheme } from "../../../shared/contexts/ThemeContext";
 
 import { getCurrentUser, isAdmin } from "../../../shared/utils/permissions";
+import { preloadAdminRoute } from "../../../shared/utils/adminRoutePreloaders";
 
 import "./AdminStickySidebarLayout.css";
 
@@ -22,6 +23,7 @@ const buildBaseWorkspaceLinks = (navigate, currentKey, displayLabels) => {
     label: "Review",
     hint: "All submission types",
     tone: "blue",
+    to: "/review",
     active: currentKey === "review",
     onClick: () => navigate("/review"),
   },
@@ -30,6 +32,7 @@ const buildBaseWorkspaceLinks = (navigate, currentKey, displayLabels) => {
     label: "Writing",
     hint: "Essay queue",
     tone: "violet",
+    to: "/admin/writing-submissions",
     active: currentKey === "writing",
     onClick: () => navigate("/admin/writing-submissions"),
   },
@@ -38,6 +41,7 @@ const buildBaseWorkspaceLinks = (navigate, currentKey, displayLabels) => {
     label: "Reading",
     hint: "IX submissions",
     tone: "blue",
+    to: "/admin/reading-submissions",
     active: currentKey === "reading",
     onClick: () => navigate("/admin/reading-submissions"),
   },
@@ -46,6 +50,7 @@ const buildBaseWorkspaceLinks = (navigate, currentKey, displayLabels) => {
     label: "Listening",
     hint: "Audio submissions",
     tone: "green",
+    to: "/admin/listening-submissions",
     active: currentKey === "listening",
     onClick: () => navigate("/admin/listening-submissions"),
   },
@@ -54,6 +59,7 @@ const buildBaseWorkspaceLinks = (navigate, currentKey, displayLabels) => {
     label: "Gateway",
     hint: "Gateway submissions",
     tone: "green",
+    to: "/admin/gateway-submissions",
     active: currentKey === "gateway",
     onClick: () => navigate("/admin/gateway-submissions"),
   },
@@ -62,6 +68,7 @@ const buildBaseWorkspaceLinks = (navigate, currentKey, displayLabels) => {
     label: "Prepare",
     hint: "Prepare submissions",
     tone: "violet",
+    to: "/prepare/submissions",
     active: currentKey === "prepare",
     onClick: () => navigate("/prepare/submissions"),
   },
@@ -70,6 +77,7 @@ const buildBaseWorkspaceLinks = (navigate, currentKey, displayLabels) => {
     label: "Orange",
     hint: "Cambridge submissions",
     tone: "orange",
+    to: "/admin/cambridge-submissions",
     active: currentKey === "cambridge",
     onClick: () => navigate("/admin/cambridge-submissions"),
   },
@@ -78,6 +86,7 @@ const buildBaseWorkspaceLinks = (navigate, currentKey, displayLabels) => {
     label: generalDisplayName,
     hint: `${generalDisplayName} submissions`,
     tone: "cyan",
+    to: "/admin/general-submissions",
     active: currentKey === "general",
     onClick: () => navigate("/admin/general-submissions"),
   },
@@ -87,9 +96,10 @@ const buildBaseWorkspaceLinks = (navigate, currentKey, displayLabels) => {
 const buildAdminOnlyWorkspaceLinks = (navigate, currentKey) => [
   {
     key: "display-settings",
-    label: "Display",
-    hint: "Global labels",
+    label: "Test Activity",
+    hint: "Usage overview",
     tone: "blue",
+    to: "/admin/display-settings",
     active: currentKey === "display-settings",
     onClick: () => navigate("/admin/display-settings"),
   },
@@ -98,6 +108,7 @@ const buildAdminOnlyWorkspaceLinks = (navigate, currentKey) => [
     label: "Runtime sync",
     hint: "Live client metrics",
     tone: "cyan",
+    to: "/admin/runtime-sync-metrics",
     active: currentKey === "runtime-sync-metrics",
     onClick: () => navigate("/admin/runtime-sync-metrics"),
   },
@@ -106,6 +117,7 @@ const buildAdminOnlyWorkspaceLinks = (navigate, currentKey) => [
     label: "Permissions",
     hint: "Teacher access",
     tone: "green",
+    to: "/admin/teacher-permissions",
     active: currentKey === "permissions",
     onClick: () => navigate("/admin/teacher-permissions"),
   },
@@ -114,6 +126,7 @@ const buildAdminOnlyWorkspaceLinks = (navigate, currentKey) => [
     label: "Users",
     hint: "Accounts and tests",
     tone: "violet",
+    to: "/admin/users",
     active: currentKey === "users",
     onClick: () => navigate("/admin/users"),
   },
@@ -219,6 +232,7 @@ export const buildSubmissionWorkspaceNav = ({
           label: reviewWorkspaceLink.label,
           hint: reviewWorkspaceLink.hint,
           tone: reviewWorkspaceLink.tone,
+          to: reviewWorkspaceLink.to,
           active: activeWorkspaceGroup === "review",
           onClick: () => {
             setActiveWorkspaceGroup("review");
@@ -231,6 +245,7 @@ export const buildSubmissionWorkspaceNav = ({
       label: ixDisplayName,
       hint: "Writing, Reading, Listening",
       tone: "blue",
+      to: "/admin/writing-submissions",
       active: activeWorkspaceGroup === "ix",
       onClick: () => {
         setActiveWorkspaceGroup("ix");
@@ -243,6 +258,7 @@ export const buildSubmissionWorkspaceNav = ({
           label: gatewayWorkspaceLink.label,
           hint: gatewayWorkspaceLink.hint,
           tone: gatewayWorkspaceLink.tone,
+          to: gatewayWorkspaceLink.to,
           active: activeWorkspaceGroup === "gateway",
           onClick: () => {
             setActiveWorkspaceGroup("gateway");
@@ -260,6 +276,7 @@ export const buildSubmissionWorkspaceNav = ({
           label: prepareWorkspaceLink.label,
           hint: prepareWorkspaceLink.hint,
           tone: prepareWorkspaceLink.tone,
+          to: prepareWorkspaceLink.to,
           active: activeWorkspaceGroup === "prepare",
           onClick: () => {
             setActiveWorkspaceGroup("prepare");
@@ -273,6 +290,7 @@ export const buildSubmissionWorkspaceNav = ({
           label: orangeWorkspaceLink.label,
           hint: orangeWorkspaceLink.hint,
           tone: orangeWorkspaceLink.tone,
+          to: orangeWorkspaceLink.to,
           active: activeWorkspaceGroup === "orange",
           onClick: () => {
             setActiveWorkspaceGroup("orange");
@@ -290,6 +308,7 @@ export const buildSubmissionWorkspaceNav = ({
           label: generalWorkspaceLink.label,
           hint: generalWorkspaceLink.hint,
           tone: generalWorkspaceLink.tone,
+          to: generalWorkspaceLink.to,
           active: activeWorkspaceGroup === "general",
           onClick: () => {
             setActiveWorkspaceGroup("general");
@@ -310,14 +329,15 @@ export const buildSubmissionWorkspaceNav = ({
           label: item.label,
           hint: item.hint,
           tone: item.tone,
+          to: item.to,
           active: item.key === activeIxKey,
           onClick: item.onClick,
         }))
       : activeWorkspaceGroup === "prepare"
       ? [
-          { key: "all", label: "All", hint: "All Prepare submissions", tone: "violet" },
-          { key: "listening", label: "Listening", hint: "Prepare Listening submissions", tone: "green" },
-          { key: "reading-writing", label: "Reading & Writing", hint: "Prepare Reading & Writing submissions", tone: "blue" },
+          { key: "all", label: "All", hint: "All Prepare submissions", tone: "violet", to: prepareWorkspaceLink.to },
+          { key: "listening", label: "Listening", hint: "Prepare Listening submissions", tone: "green", to: prepareWorkspaceLink.to },
+          { key: "reading-writing", label: "Reading & Writing", hint: "Prepare Reading & Writing submissions", tone: "blue", to: prepareWorkspaceLink.to },
         ].map((item) => ({
           ...item,
           active: item.key === activePrepareSkill,
@@ -354,6 +374,7 @@ export const buildReviewWorkspaceNav = ({
 } = {}) => {
   const {
     ixDisplayName,
+    ixWorkspaceLinks,
     reviewWorkspaceLink,
     orangeWorkspaceLink,
     gatewayWorkspaceLink,
@@ -373,6 +394,7 @@ export const buildReviewWorkspaceNav = ({
       label: reviewWorkspaceLink.label,
       hint: reviewWorkspaceLink.hint,
       tone: reviewWorkspaceLink.tone,
+      to: reviewWorkspaceLink.to,
       active: activeTab === "review" || activeWorkspaceGroup === "review",
       onClick: () => {
         setActiveWorkspaceGroup("review");
@@ -387,6 +409,7 @@ export const buildReviewWorkspaceNav = ({
     label: ixDisplayName,
     hint: "Writing, Reading, Listening",
     tone: "blue",
+    to: "/admin/writing-submissions",
     active: activeTab !== "review" && activeWorkspaceGroup === "ix",
     onClick: () => {
       setActiveWorkspaceGroup("ix");
@@ -401,6 +424,7 @@ export const buildReviewWorkspaceNav = ({
       label: gatewayWorkspaceLink.label,
       hint: gatewayWorkspaceLink.hint,
       tone: gatewayWorkspaceLink.tone,
+      to: gatewayWorkspaceLink.to,
       active: activeTab !== "review" && activeWorkspaceGroup === "gateway",
       onClick: () => {
         navigateToPlatformSubmissionPage("gateway", "all");
@@ -414,6 +438,7 @@ export const buildReviewWorkspaceNav = ({
       label: prepareWorkspaceLink.label,
       hint: prepareWorkspaceLink.hint,
       tone: prepareWorkspaceLink.tone,
+      to: prepareWorkspaceLink.to,
       active: activeTab !== "review" && activeWorkspaceGroup === "prepare",
       onClick: () => {
         setActiveWorkspaceGroup("prepare");
@@ -428,6 +453,7 @@ export const buildReviewWorkspaceNav = ({
       label: orangeWorkspaceLink.label,
       hint: orangeWorkspaceLink.hint,
       tone: orangeWorkspaceLink.tone,
+      to: orangeWorkspaceLink.to,
       active: activeTab !== "review" && activeWorkspaceGroup === "orange",
       onClick: () => {
         navigateToPlatformSubmissionPage("orange", "all");
@@ -441,6 +467,7 @@ export const buildReviewWorkspaceNav = ({
       label: generalWorkspaceLink.label,
       hint: generalWorkspaceLink.hint,
       tone: generalWorkspaceLink.tone,
+      to: generalWorkspaceLink.to,
       active: activeTab !== "review" && activeWorkspaceGroup === "general",
       onClick: () => {
         navigateToPlatformSubmissionPage("general", "all");
@@ -460,6 +487,7 @@ export const buildReviewWorkspaceNav = ({
         key: `workspace-child-${tab.key}`,
         label: tab.shortLabel || tab.label,
         hint: tab.label,
+        to: ixWorkspaceLinks.find((item) => item.key === tab.key)?.to,
         tone:
           tab.key === "writing"
             ? "violet"
@@ -483,6 +511,7 @@ export const buildReviewWorkspaceNav = ({
         label: tab.shortLabel,
         hint: tab.label,
         tone: tab.tone,
+        to: orangeWorkspaceLink.to,
         active: false,
         onClick: () => {
           navigateToPlatformSubmissionPage("orange", tab.key);
@@ -498,6 +527,7 @@ export const buildReviewWorkspaceNav = ({
         label: tab.shortLabel,
         hint: tab.label,
         tone: tab.tone,
+        to: gatewayWorkspaceLink.to,
         active: false,
         onClick: () => {
           navigateToPlatformSubmissionPage("gateway", tab.key);
@@ -512,6 +542,7 @@ export const buildReviewWorkspaceNav = ({
         label: tab.shortLabel,
         hint: tab.label,
         tone: tab.tone,
+        to: generalWorkspaceLink.to,
         active: false,
         onClick: () => {
           navigateToPlatformSubmissionPage("general", tab.key);
@@ -580,12 +611,19 @@ export const AdminSidebarNavList = ({ items = [], ariaLabel = "Admin navigation"
           .join(" ");
 
         const showBadge = Number.isFinite(Number(item.badge));
+        const preloadRoute = () => {
+          const path = item.preloadPath || item.to;
+          if (path) preloadAdminRoute(path);
+        };
 
         return (
           <button
             key={item.key || item.label}
             type="button"
             onClick={item.onClick}
+            onMouseEnter={preloadRoute}
+            onFocus={preloadRoute}
+            onPointerDown={preloadRoute}
             className={buttonClassName}
             aria-current={item.active ? "page" : undefined}
           >
