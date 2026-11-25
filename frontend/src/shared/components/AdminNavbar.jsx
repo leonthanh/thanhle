@@ -10,6 +10,18 @@ import { useDisplaySettings } from "../contexts/DisplaySettingsContext";
 import "./AdminNavbar.css";
 
 const COMPACT_NAVBAR_BREAKPOINT = 900;
+const PROGRESS_REPORT_OPTIONS = [
+  {
+    id: "general",
+    label: "Star Edu",
+    to: "/admin/progress-reports?report=general",
+  },
+  {
+    id: "ielts",
+    label: "IELTS",
+    to: "/admin/progress-reports?report=ielts",
+  },
+];
 
 const NavIcon = ({ name }) => {
   const sharedProps = {
@@ -344,10 +356,13 @@ const AdminNavbar = () => {
   const [seenNotificationKeysById, setSeenNotificationKeysById] = useState({});
   const [expandedNotificationGroups, setExpandedNotificationGroups] = useState({});
   const [adminDropdownVisible, setAdminDropdownVisible] = useState(false);
+  const [progressReportsDropdownVisible, setProgressReportsDropdownVisible] =
+    useState(false);
   const [isCompactMenu, setIsCompactMenu] = useState(
     typeof window !== "undefined" ? window.innerWidth <= COMPACT_NAVBAR_BREAKPOINT : false
   );
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [mobileProgressReportsOpen, setMobileProgressReportsOpen] = useState(false);
   const [mobileDrawerTab, setMobileDrawerTab] = useState("overview");
   const [mobileCambridgeSection, setMobileCambridgeSection] = useState("ket");
   const [mobileCambridgeGroup, setMobileCambridgeGroup] = useState("flyers");
@@ -367,6 +382,8 @@ const AdminNavbar = () => {
   const [desktopNavbarHeight, setDesktopNavbarHeight] = useState(0);
   const notificationDropdownRef = useRef(null);
   const adminDropdownRef = useRef(null);
+  const progressReportsDropdownRef = useRef(null);
+  const progressReportsDropdownToggleRef = useRef(null);
   const navRef = useRef(null);
   const userDisplayName = resolveAdminUserDisplayName(user);
   const canManageWriting = canManageCategory(user, "writing");
@@ -548,6 +565,12 @@ const AdminNavbar = () => {
       ) {
         setAdminDropdownVisible(false);
       }
+      if (
+        progressReportsDropdownRef.current &&
+        !progressReportsDropdownRef.current.contains(event.target)
+      ) {
+        setProgressReportsDropdownVisible(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -679,21 +702,33 @@ const AdminNavbar = () => {
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
-    if (!mobileDrawerOpen && !desktopDrawerMode) return undefined;
+    if (
+      !mobileDrawerOpen &&
+      !desktopDrawerMode &&
+      !progressReportsDropdownVisible
+    ) {
+      return undefined;
+    }
 
     const handleKeyDown = (event) => {
       if (event.key !== "Escape") return;
+      if (progressReportsDropdownVisible) {
+        progressReportsDropdownToggleRef.current?.focus();
+      }
       setMobileDrawerOpen(false);
+      setMobileProgressReportsOpen(false);
       setDesktopDrawerMode(null);
+      setProgressReportsDropdownVisible(false);
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [mobileDrawerOpen, desktopDrawerMode]);
+  }, [mobileDrawerOpen, desktopDrawerMode, progressReportsDropdownVisible]);
 
   useEffect(() => {
     setDesktopDrawerMode(null);
-  }, [location.pathname]);
+    setProgressReportsDropdownVisible(false);
+  }, [location.pathname, location.search]);
 
   const handleLogout = async () => {
     setDesktopDrawerMode(null);
@@ -705,6 +740,7 @@ const AdminNavbar = () => {
   const closeDesktopMenus = () => {
     setNotificationDropdownVisible(false);
     setAdminDropdownVisible(false);
+    setProgressReportsDropdownVisible(false);
     setDesktopDrawerMode(null);
   };
 
@@ -813,7 +849,10 @@ const AdminNavbar = () => {
 
   const closeDesktopDrawer = () => setDesktopDrawerMode(null);
 
-  const closeMobileDrawer = () => setMobileDrawerOpen(false);
+  const closeMobileDrawer = () => {
+    setMobileDrawerOpen(false);
+    setMobileProgressReportsOpen(false);
+  };
   const openMobileDrawer = () => {
     closeDesktopMenus();
     const preferredTab = getPreferredMobileDrawerTab();
@@ -1619,6 +1658,17 @@ const AdminNavbar = () => {
   const isReviewCurrent = pathname.startsWith("/review");
   const isProfileCurrent = pathname.startsWith("/profile");
   const isProgressReportsCurrent = pathname.startsWith("/admin/progress-reports");
+  const activeProgressReportId =
+    new URLSearchParams(location.search || "").get("report") === "ielts"
+      ? "ielts"
+      : "general";
+  const progressReportMenuItems = PROGRESS_REPORT_OPTIONS.map((report) => ({
+    key: `progress-report-${report.id}`,
+    label: report.label,
+    to: report.to,
+    iconName: "review",
+    active: isProgressReportsCurrent && report.id === activeProgressReportId,
+  }));
   const isAdminCurrent =
     pathname.startsWith("/admin/users") ||
     pathname.startsWith("/admin/teacher-permissions") ||
@@ -1674,7 +1724,10 @@ const AdminNavbar = () => {
         <Link
           key={item.key}
           to={item.to}
-          className={itemClassName}
+          className={`${itemClassName}${
+            item.active ? " adminNavbar__menuItem--active" : ""
+          }`}
+          aria-current={item.active ? "page" : undefined}
           onMouseEnter={() => preloadAdminRoute(item.to)}
           onFocus={() => preloadAdminRoute(item.to)}
           onPointerDown={() => preloadAdminRoute(item.to)}
@@ -1728,6 +1781,39 @@ const AdminNavbar = () => {
         <span className="adminNavbar__mobileQuickMeta">{meta}</span>
       </span>
     </Link>
+  );
+
+  const renderMobileProgressReports = () => (
+    <div className="adminNavbar__mobileProgressReports">
+      <button
+        type="button"
+        className="adminNavbar__mobileQuickLink adminNavbar__mobileProgressReportsToggle"
+        aria-expanded={mobileProgressReportsOpen}
+        aria-controls="admin-navbar-mobile-progress-reports"
+        onClick={() => setMobileProgressReportsOpen((isOpen) => !isOpen)}
+      >
+        <span className="adminNavbar__mobileQuickIcon" aria-hidden="true">
+          <NavIcon name="review" />
+        </span>
+        <span className="adminNavbar__mobileQuickText">
+          <span className="adminNavbar__mobileQuickTitle">Progress Reports</span>
+          <span className="adminNavbar__mobileQuickMeta">
+            Choose Star Edu or IELTS report
+          </span>
+        </span>
+        <span className="adminNavbar__mobileProgressReportsChevron" aria-hidden="true">
+          <NavIcon name="chevron-down" />
+        </span>
+      </button>
+      {mobileProgressReportsOpen ? (
+        <div
+          id="admin-navbar-mobile-progress-reports"
+          className="adminNavbar__mobileProgressReportsOptions"
+        >
+          {renderMenuItems(progressReportMenuItems, closeMobileDrawer, "mobile")}
+        </div>
+      ) : null}
+    </div>
   );
 
   const renderDesktopDrawerTabs = (sections, activeKey, onChange) => (
@@ -2155,12 +2241,7 @@ const AdminNavbar = () => {
           {renderMobileQuickLink("/review", "Review", "Open review queue and submission flow", "review")}
           {renderMobileQuickLink("/select-test", "Test List", "Browse and edit available tests", "tests")}
           {["admin", "teacher"].includes(user?.role)
-            ? renderMobileQuickLink(
-                "/admin/progress-reports",
-                "Progress Reports",
-                "Comment with templates and export Word/PDF",
-                "review"
-              )
+            ? renderMobileProgressReports()
             : null}
           {examLevels
             .filter((level) => String(level.code || "").toLowerCase() !== "prepare")
@@ -2570,14 +2651,48 @@ const AdminNavbar = () => {
         </Link>
 
         {["admin", "teacher"].includes(user?.role) && (
-          <Link
-            to="/admin/progress-reports"
-            className={`adminNavbar__link${isProgressReportsCurrent ? " adminNavbar__link--active" : ""}`}
-            title="Progress Reports"
+          <div
+            className="adminNavbar__dropdown"
+            ref={progressReportsDropdownRef}
           >
-            <span className="adminNavbar__icon" aria-hidden="true"><NavIcon name="review" /></span>
-            <span className="adminNavbar__label">Progress Reports</span>
-          </Link>
+            <button
+              ref={progressReportsDropdownToggleRef}
+              type="button"
+              className={`adminNavbar__link adminNavbar__dropdownToggle adminNavbar__progressReportsToggle${
+                isProgressReportsCurrent || progressReportsDropdownVisible
+                  ? " adminNavbar__link--active"
+                  : ""
+              }`}
+              title="Progress Reports"
+              aria-expanded={progressReportsDropdownVisible}
+              aria-controls="admin-navbar-progress-reports-options"
+              onClick={() => {
+                setAdminDropdownVisible(false);
+                setNotificationDropdownVisible(false);
+                setDesktopDrawerMode(null);
+                setProgressReportsDropdownVisible((isVisible) => !isVisible);
+              }}
+            >
+              <span className="adminNavbar__icon" aria-hidden="true">
+                <NavIcon name="review" />
+              </span>
+              <span className="adminNavbar__label">Progress Reports</span>
+              <span className="adminNavbar__caret" aria-hidden="true">
+                <NavIcon name="chevron-down" />
+              </span>
+            </button>
+            {progressReportsDropdownVisible ? (
+              <div
+                id="admin-navbar-progress-reports-options"
+                className="adminNavbar__menu"
+              >
+                {renderMenuItems(
+                  progressReportMenuItems,
+                  () => setProgressReportsDropdownVisible(false)
+                )}
+              </div>
+            ) : null}
+          </div>
         )}
 
         {user?.role === 'admin' && (

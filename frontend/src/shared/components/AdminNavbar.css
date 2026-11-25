@@ -259,6 +259,10 @@
   margin-right: 0;
 }
 
+.adminNavbar__progressReportsToggle {
+  font: inherit;
+}
+
 .adminNavbar__icon {
   width: 18px;
   height: 18px;
@@ -885,6 +889,42 @@
   border-color: #c7d2fe;
 }
 
+.adminNavbar__mobileProgressReports {
+  min-width: 0;
+}
+
+.adminNavbar__mobileProgressReportsToggle {
+  appearance: none;
+  font: inherit;
+  line-height: inherit;
+}
+
+.adminNavbar__mobileProgressReportsChevron {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  color: #64748b;
+  transition: transform 0.2s ease;
+}
+
+.adminNavbar__mobileProgressReportsChevron svg {
+  width: 100%;
+  height: 100%;
+}
+
+.adminNavbar__mobileProgressReportsToggle[aria-expanded="true"]
+  .adminNavbar__mobileProgressReportsChevron {
+  transform: rotate(180deg);
+}
+
+.adminNavbar__mobileProgressReportsOptions {
+  padding-left: 12px;
+}
+
 .adminNavbar__mobileQuickIcon {
   flex: 0 0 auto;
   width: 36px;
@@ -994,6 +1034,11 @@
 .adminNavbar__menuItem:hover {
   background: #f4f7fb;
   transform: translateY(-1px);
+}
+
+.adminNavbar__menuItem--active {
+  background: #eef2ff;
+  color: #1d4ed8;
 }
 
 .adminNavbar__menuItem:last-child {
