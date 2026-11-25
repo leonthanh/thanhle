@@ -84,6 +84,52 @@ describe("exam level skill test adapter", () => {
     );
   });
 
+  test("sets Prepare Listening tests to 15 minutes despite a legacy 30 minute level config", async () => {
+    const createdTest = { id: 22, title: "Prepare Listening 1" };
+    ExamLevelTest.create.mockResolvedValue(createdTest);
+
+    await service.createTest({
+      code: "prepare",
+      skill: "listening",
+      user: { id: 8, role: "teacher" },
+      body: {
+        title: "Prepare Listening 1",
+        classCode: "P1",
+        testType: "exam-listening-v1",
+        parts: [{ sections: [] }],
+      },
+    });
+
+    expect(ExamLevelTest.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skill: "listening",
+        templateId: "exam-listening-v1",
+        duration: 15,
+      })
+    );
+  });
+
+  test("normalizes existing Prepare Listening tests to 15 minutes on update", async () => {
+    const existingTest = {
+      update: jest.fn().mockResolvedValue(undefined),
+    };
+    ExamLevelTest.findOne.mockResolvedValue(existingTest);
+
+    await service.updateTest({
+      code: "prepare",
+      skill: "listening",
+      id: 22,
+      body: { title: "Updated Prepare Listening" },
+    });
+
+    expect(existingTest.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        duration: 15,
+        title: "Updated Prepare Listening",
+      })
+    );
+  });
+
   test("creates a combined Reading and Writing test using the Gateway template", async () => {
     ExamLevel.findOne.mockResolvedValue({
       ...level,

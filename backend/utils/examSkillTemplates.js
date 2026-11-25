@@ -11,7 +11,7 @@ const EXAM_SKILL_TEMPLATES = Object.freeze([
     label: "Listening",
     templateId: "exam-listening-v1",
     templateName: "Listening standard template",
-    defaultDurationMinutes: 30,
+    defaultDurationMinutes: 15,
   }),
   Object.freeze({
     skill: "writing",

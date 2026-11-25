@@ -46,6 +46,7 @@ const QuestionTypeSelector = ({
   showAll = false,
   className = '',
   questionTypes = null,
+  additionalScopeLabel = '',
 }) => {
   // Get available question types
   const availableQuestionTypes = Array.isArray(questionTypes) && questionTypes.length > 0
@@ -72,7 +73,14 @@ const QuestionTypeSelector = ({
       className={className}
     >
       {availableQuestionTypes.map((qt) => {
-        const scopeLabel = getQuestionTypeScopeLabel(qt);
+        const scopeLabels = [
+          getQuestionTypeScopeLabel(qt),
+          additionalScopeLabel,
+        ]
+          .flatMap((label) => String(label || '').split('/'))
+          .map((label) => label.trim())
+          .filter((label, index, labels) => label && labels.indexOf(label) === index);
+        const scopeLabel = scopeLabels.join('/');
         return (
           <option key={qt.id} value={qt.id} title={qt.description}>
             {qt.labelVi || qt.label}{scopeLabel ? ` - ${scopeLabel}` : ''}

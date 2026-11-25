@@ -5,6 +5,7 @@ import {
   buildPlacementAttemptPath,
   readPlacementRuntimeContext,
 } from "../../../shared/utils/placementTests";
+import { buildSelectTestPath } from "../../../shared/config/examRegistry";
 import ExamCoreListeningRuntimePage from "../../exam-engine/shared/pages/ExamCoreListeningRuntimePage";
 import ExamCoreReadingRuntimePage from "../../exam-engine/shared/pages/ExamCoreReadingRuntimePage";
 
@@ -69,7 +70,7 @@ const ExamLevelSkillRuntimePage = ({ code: codeOverride } = {}) => {
     hubPath: placementContext.isPlacementRuntime
       ? buildPlacementAttemptPath(placementContext.placementAttemptToken)
       : code === "prepare"
-        ? "/prepare"
+        ? buildSelectTestPath({ platform: "prepare", tab: skill })
         : `/exam-levels/${codePath}`,
   };
 

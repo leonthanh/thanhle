@@ -21,6 +21,7 @@ describe("OpenClozeSectionDisplay", () => {
           questions: [{
             passageTitle: "Earth Festival",
             passageText: notesText,
+            scoreNote: "____/5 (1 mark per answer)",
           }],
         }}
         secIdx={0}
@@ -34,6 +35,8 @@ describe("OpenClozeSectionDisplay", () => {
         handleAnswerChange={handleAnswerChange}
       />
     );
+
+    expect(screen.getByText("____/5 (1 mark per answer)")).toBeInTheDocument();
 
     for (let number = 1; number <= 5; number += 1) {
       expect(screen.getByPlaceholderText(`(${number})`)).toHaveAttribute(

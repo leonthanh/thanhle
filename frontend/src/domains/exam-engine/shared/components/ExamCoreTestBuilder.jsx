@@ -26,6 +26,10 @@ import useQuillImageUpload from "../../../../shared/hooks/useQuillImageUpload";
 import { canManageCategory } from '../../../../shared/utils/permissions';
 import AudioPreviewBlock from "../../../../shared/components/AudioPreviewBlock";
 import LineIcon from "../../../../shared/components/LineIcon.jsx";
+import {
+  PrepareListeningSectionScoreNoteInput,
+  PrepareListeningSectionScoreNotePreview,
+} from "./PrepareListeningSectionScoreNote";
 import "./ExamCoreTestBuilder.css";
 import { computeQuestionStarts, getQuestionCountForSection } from "../utils/examQuestionNumbering";
 import renumberGatewayClozeQuestion from "../utils/gatewayClozeNumbering";
@@ -34,6 +38,7 @@ import { normalizeAudioReference, normalizeListeningPartsAudio } from "../../../
 import resolveAuthUserDisplayName from "../../../../shared/utils/authUserDisplayName";
 import GATEWAY_WRITING_RUBRIC from "../../../../shared/config/gatewayWritingRubric";
 import PrepareQuestionsEditor from "../../../prepare/PrepareQuestionsEditor";
+import { PREPARE_LISTENING_AUDIO_PLAYS_PER_PART } from "../../../prepare/prepareListeningConfig";
 import {
   buildPrepareReadingWritingParts,
   countPrepareScoringUnitsForSection,
@@ -1051,6 +1056,7 @@ const ExamCoreTestBuilder = ({
   displayName = null,
   prepareReadingWriting = false,
   prepareFlexibleReadingWriting = false,
+  prepareListening = false,
   draftStorageKey = null,
 }) => {
   const navigate = useNavigate();
@@ -1074,6 +1080,7 @@ const ExamCoreTestBuilder = ({
   const isGatewayReadingWriting = String(testType || '').toLowerCase() === 'gateway-reading-writing'
     && !prepareFlexibleReadingWriting;
   const isGatewayListening = String(testType || '').toLowerCase() === 'gateway-listening';
+  const canRenameSections = prepareFlexibleReadingWriting || prepareListening;
   const storageKey = draftStorageKey || `cambridgeTestDraft-${testType}`;
   const isListeningTest = testType.includes('listening');
   const youngLearnerSupportedTypeMap = {
@@ -2564,7 +2571,7 @@ const ExamCoreTestBuilder = ({
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {prepareFlexibleReadingWriting && editingSectionIndex === idx ? (
+                  {canRenameSections && editingSectionIndex === idx ? (
                     <input
                       autoFocus
                       type="text"
@@ -2585,10 +2592,12 @@ const ExamCoreTestBuilder = ({
                     <span style={{ flex: 1, minWidth: 0 }}>
                       {prepareFlexibleReadingWriting || isGatewayReadingWriting || isGatewayListening
                         ? (sec.sectionTitle || `Mục ${idx + 1}`)
-                        : `Section ${idx + 1}: ${sec.questionType}`}
+                        : prepareListening && sec.sectionTitle
+                          ? sec.sectionTitle
+                          : `Section ${idx + 1}: ${sec.questionType}`}
                     </span>
                   )}
-                  {prepareFlexibleReadingWriting && editingSectionIndex !== idx && (
+                  {canRenameSections && editingSectionIndex !== idx && (
                     <button
                       type="button"
                       title="Đổi tên Section"
@@ -2940,6 +2949,35 @@ const ExamCoreTestBuilder = ({
           </div>
         </div>
 
+        {prepareListening && (
+          <div
+            role="note"
+            style={{
+              border: '1px solid #fed7aa',
+              borderLeft: '4px solid #f97316',
+              borderRadius: '8px',
+              padding: '12px 14px',
+              marginBottom: '12px',
+              background: '#fff7ed',
+              color: '#9a3412',
+              fontSize: '13px',
+              lineHeight: 1.5,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 700 }}>
+              <InlineIcon name="clock" size={15} />
+              Thời lượng toàn bài: {testConfig.duration} phút
+            </div>
+            <div style={{ marginTop: 4 }}>
+              Tính theo tổng audio khoảng 5 phút: 2 lượt nghe là 10 phút, cộng khoảng 5 phút để hoàn thiện câu trả lời.
+            </div>
+            <div style={{ marginTop: 4 }}>
+              Mỗi Part có 1 lượt phát đầu và tối đa 1 lần nghe lại do học sinh bấm.
+              Để giới hạn riêng từng Part, hãy tải audio ở mục Audio của từng Part.
+            </div>
+          </div>
+        )}
+
         {/* Global Audio (Listening only) */}
         {isListeningTest && (
           <div className="ctb-card" style={{
@@ -2999,7 +3037,9 @@ const ExamCoreTestBuilder = ({
                 </div>
               )}
               <div style={{ marginTop: '6px', fontSize: '11px', color: '#6b7280' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><InlineIcon name="idea" size={12} />Audio chung sẽ phát xuyên suốt khi học sinh chuyển part.</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><InlineIcon name="idea" size={12} />{prepareListening
+                  ? `Audio chung dùng chung tối đa ${PREPARE_LISTENING_AUDIO_PLAYS_PER_PART} lượt cho toàn bài; muốn giới hạn riêng từng Part, tải file ở Audio của từng Part.`
+                  : 'Audio chung sẽ phát xuyên suốt khi học sinh chuyển part.'}</span>
               </div>
             </div>
           </div>
@@ -3159,6 +3199,11 @@ const ExamCoreTestBuilder = ({
                     <div style={{ marginTop: '6px', fontSize: '11px', color: '#6b7280' }}>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><InlineIcon name="idea" size={12} />Hỗ trợ file audio (mp3/wav/m4a/ogg...). Backend giới hạn 50MB.</span>
                     </div>
+                    {prepareListening && (
+                      <div style={{ marginTop: '6px', fontSize: '11px', color: '#9a3412' }}>
+                        Mỗi Part: {PREPARE_LISTENING_AUDIO_PLAYS_PER_PART} lượt nghe tối đa (1 lượt đầu + 1 lần nghe lại).
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -3384,13 +3429,15 @@ const ExamCoreTestBuilder = ({
               }}>
                 <h3 style={{ margin: '0 0 16px', color: isMoversReading ? 'var(--builder-text, #1f2937)' : '#374151', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <InlineIcon name="writing" size={16} />
-                  {prepareFlexibleReadingWriting || isGatewayReadingWriting || isGatewayListening
+                  {prepareListening
+                    ? (currentSection.sectionTitle || `Section ${selectedSectionIndex + 1}`)
+                    : prepareFlexibleReadingWriting || isGatewayReadingWriting || isGatewayListening
                     ? (currentSection.sectionTitle || `Mục ${selectedSectionIndex + 1}`)
                     : `Section ${selectedSectionIndex + 1}`}
                 </h3>
-                {prepareFlexibleReadingWriting && (
+                {canRenameSections && (
                   <label style={{ display: 'block', marginBottom: 16, fontWeight: 600, color: '#374151' }}>
-                    Tiêu đề Section:
+                    Tên Section:
                     <input
                       type="text"
                       value={currentSection.sectionTitle || ''}
@@ -3484,12 +3531,32 @@ const ExamCoreTestBuilder = ({
                     <QuestionTypeSelector
                       testType={testType}
                       questionTypes={questionTypeOptions}
+                      additionalScopeLabel={prepareListening ? 'PP' : ''}
                       value={currentSection.questionType}
                       onChange={handleQuestionTypeChange}
                       style={{ maxWidth: '400px' }}
                     />
                   )}
                 </div>
+                {prepareListening && ['abc', 'abcd'].includes(currentSection.questionType) && (
+                  <PrepareListeningSectionScoreNoteInput
+                    scoreNote={currentSection.scoreNote}
+                    onChange={(scoreNote) => {
+                      updateParts((previous) => previous.map((part, partIndex) => (
+                        partIndex !== selectedPartIndex
+                          ? part
+                          : {
+                              ...part,
+                              sections: (part.sections || []).map((section, sectionIndex) => (
+                                sectionIndex === selectedSectionIndex
+                                  ? { ...section, scoreNote }
+                                  : section
+                              )),
+                            }
+                      )));
+                    }}
+                  />
+                )}
                 {prepareFlexibleReadingWriting && (
                   <div style={{ marginBottom: 20, padding: 14, background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 8 }}>
                     {['short-message', 'story-writing'].includes(currentSection.questionType) ? (
@@ -3586,7 +3653,7 @@ const ExamCoreTestBuilder = ({
                               }}>
                                 Prepare writing
                               </span>
-                            ) : !['long-text-mc', 'prepare-reading-comprehension', 'cloze-mc', 'cloze-test', 'short-message', 'people-matching', 'gap-match', 'matching', 'word-form', 'matching-pictures', 'image-cloze', 'word-drag-cloze', 'reading-open-questions', 'true-false-not-given', 'word-bank-completion', 'conditional-sentence-completion', 'reported-command-completion', 'reported-speech-transformation', 'past-simple-passive-transformation', 'reported-speech-verb-choice', 'definition-completion', 'word-bank-adjective-formation'].includes(currentSection.questionType) && (
+                            ) : (!prepareListening || ['abc', 'abcd'].includes(currentSection.questionType)) && !['long-text-mc', 'prepare-reading-comprehension', 'cloze-mc', 'cloze-test', 'short-message', 'people-matching', 'gap-match', 'matching', 'word-form', 'matching-pictures', 'image-cloze', 'word-drag-cloze', 'reading-open-questions', 'true-false-not-given', 'word-bank-completion', 'conditional-sentence-completion', 'reported-command-completion', 'reported-speech-transformation', 'past-simple-passive-transformation', 'reported-speech-verb-choice', 'definition-completion', 'word-bank-adjective-formation'].includes(currentSection.questionType) && (
                               <span style={{ 
                                 fontWeight: 600, 
                                 color: '#6366f1',
@@ -3778,6 +3845,12 @@ const ExamCoreTestBuilder = ({
                   >
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><InlineIcon name="create" size={14} style={{ color: 'white' }} />Thêm câu hỏi</span>
                   </button>}
+                  {prepareListening && ['abc', 'abcd'].includes(currentSection.questionType) && (
+                    <PrepareListeningSectionScoreNotePreview
+                      section={currentSection}
+                      startingNumber={questionStarts.sectionStart[`${selectedPartIndex}-${selectedSectionIndex}`] || 1}
+                    />
+                  )}
                 </div>
               </div>
             )}

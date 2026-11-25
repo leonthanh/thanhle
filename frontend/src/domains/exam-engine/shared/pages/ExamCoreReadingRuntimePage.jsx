@@ -5091,7 +5091,7 @@ const ExamCoreReadingRuntimePage = ({
           onClose={() => {
             setResults(null);
             setSubmitted(false);
-            navigate(-1);
+            navigate(isPrepareReadingWriting ? fallbackHubPath : -1);
           }}
         />
       )}

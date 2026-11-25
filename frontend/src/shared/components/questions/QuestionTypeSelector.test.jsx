@@ -35,3 +35,24 @@ test('question type options show concise supported-level suffixes', () => {
   fireEvent.change(screen.getByRole('combobox'), { target: { value: 'ket-pet-type' } });
   expect(onChange).toHaveBeenCalledWith('ket-pet-type');
 });
+
+test('question type options can include the Prepare scope alongside existing scopes', () => {
+  render(
+    <QuestionTypeSelector
+      additionalScopeLabel="PP"
+      questionTypes={[
+        { id: 'notes', labelVi: 'Notes completion', supportedTests: ['ielts-listening'] },
+        {
+          id: 'shared',
+          labelVi: 'Fill in the blanks',
+          supportedTests: ['ielts-listening', 'ket-reading', 'pet-reading', 'general-reading'],
+        },
+      ]}
+      value="notes"
+      onChange={jest.fn()}
+    />
+  );
+
+  expect(screen.getByRole('option', { name: 'Notes completion - IELTS/PP' })).toBeTruthy();
+  expect(screen.getByRole('option', { name: 'Fill in the blanks - Dùng chung/PP' })).toBeTruthy();
+});
