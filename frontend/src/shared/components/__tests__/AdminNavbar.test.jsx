@@ -188,9 +188,59 @@ describe('AdminNavbar auth sync', () => {
       }
 
       expect(within(drawer).queryByRole('button', { name: 'Admin' })).not.toBeInTheDocument();
-      expect(within(drawer).getByRole('link', { name: /Progress Reports/ })).toHaveAttribute(
+      const progressReportsToggle = within(drawer).getByRole('button', {
+        name: /Progress Reports/,
+      });
+      expect(progressReportsToggle).toHaveAttribute('aria-expanded', 'false');
+      fireEvent.click(progressReportsToggle);
+      expect(progressReportsToggle).toHaveAttribute('aria-expanded', 'true');
+      expect(within(drawer).getByRole('link', { name: 'Star Edu' })).toHaveAttribute(
         'href',
-        '/admin/progress-reports'
+        '/admin/progress-reports?report=general'
+      );
+      expect(within(drawer).getByRole('link', { name: 'IELTS' })).toHaveAttribute(
+        'href',
+        '/admin/progress-reports?report=ielts'
+      );
+    } finally {
+      unmount();
+      window.innerWidth = originalWidth;
+    }
+  });
+
+  test('shows the Star Edu and IELTS choices in the desktop Progress Reports dropdown', async () => {
+    const originalWidth = window.innerWidth;
+    window.innerWidth = 1280;
+    getStoredUser.mockReturnValue({
+      id: 14,
+      name: 'Teacher',
+      role: 'teacher',
+      canManageTests: true,
+    });
+
+    const { unmount } = render(
+      <MemoryRouter initialEntries={['/admin/progress-reports?report=ielts']}>
+        <AdminNavbar />
+      </MemoryRouter>
+    );
+
+    try {
+      const progressReportsToggle = await screen.findByRole('button', {
+        name: 'Progress Reports',
+      });
+      fireEvent.click(progressReportsToggle);
+
+      expect(screen.getByRole('link', { name: 'Star Edu' })).toHaveAttribute(
+        'href',
+        '/admin/progress-reports?report=general'
+      );
+      expect(screen.getByRole('link', { name: 'IELTS' })).toHaveAttribute(
+        'href',
+        '/admin/progress-reports?report=ielts'
+      );
+      expect(screen.getByRole('link', { name: 'IELTS' })).toHaveAttribute(
+        'aria-current',
+        'page'
       );
     } finally {
       unmount();

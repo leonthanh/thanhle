@@ -51,8 +51,26 @@ header.band .meta{grid-column:1/-1}
 .meta select option{color:#15263A}
 .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:7px;padding:6px 12px;cursor:pointer;font-size:.85rem}
 .btn-ghost:hover{background:rgba(255,255,255,.12)}
+@media (max-width:560px){
+  header.band .wrap{padding-block:10px 12px;gap:8px 10px}
+  .org{font-size:.62rem;line-height:1.35;letter-spacing:.04em;margin-bottom:3px}
+  .brand h1{font-size:1.05rem;line-height:1.2}
+  .brand p{font-size:.72rem;line-height:1.35}
+  .logo{height:36px;padding:3px 5px}
+  .meta{gap:7px 8px;align-items:stretch}
+  .meta label{flex:1 1 125px;min-width:0;font-size:.62rem;gap:2px}
+  .meta input{width:100%;box-sizing:border-box}
+  .meta select{max-width:100%;box-sizing:border-box}
+  .meta input,.meta select{padding:5px 7px;font-size:.8rem}
+  .btn-ghost{padding:5px 8px;font-size:.75rem}
+  nav.tabs button{padding:9px 10px 8px;font-size:.84rem;gap:5px}
+  .dot{min-width:17px;height:17px;font-size:.65rem}
+}
 
 nav.tabs{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+nav.tabs.tabs--can-scroll-left::before,nav.tabs.tabs--can-scroll-right::after{position:absolute;top:0;bottom:0;z-index:6;display:grid;place-items:center;width:26px;pointer-events:none;color:var(--teal);font-size:1.3rem;font-weight:800}
+nav.tabs.tabs--can-scroll-left::before{content:"‹";left:0;background:linear-gradient(90deg,var(--surface) 30%,transparent)}
+nav.tabs.tabs--can-scroll-right::after{content:"›";right:0;background:linear-gradient(270deg,var(--surface) 30%,transparent)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--navy)}
 nav.tabs .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
 nav.tabs button{border:0;background:none;padding:12px 14px 10px;cursor:pointer;color:var(--muted);font-weight:500;border-bottom:3px solid transparent;white-space:nowrap;display:flex;gap:8px;align-items:center}
@@ -645,9 +663,20 @@ const $=s=>document.querySelector(s);
 const esc=t=>t.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fmt=t=>esc(applyPronoun(t)).replace(/\[[^\]]*\]/g,m=>`<span class="ph">${m}</span>`);
 
+function updateTabScrollHint(){
+  const nav=$("nav.tabs"),track=$("#tabs");
+  if(!nav||!track)return;
+  const maxScroll=track.scrollWidth-track.clientWidth;
+  nav.classList.toggle("tabs--can-scroll-left",track.scrollLeft>1);
+  nav.classList.toggle("tabs--can-scroll-right",maxScroll>1&&track.scrollLeft<maxScroll-1);
+}
+$("#tabs").addEventListener("scroll",updateTabScrollHint,{passive:true});
+window.addEventListener("resize",updateTabScrollHint);
+
 function renderTabs(){
   const items=ORDER.map(k=>[k,SK[k].name,SK[k].en,countSel(k)]).concat([["gen","Nhận xét chung","",S.gen.sel.length],["sum","Tổng hợp","",null],["xuat","Xuất báo cáo","",null]]);
   $("#tabs").innerHTML=items.map(([k,n,en,c])=>`<button role="tab" type="button" data-tab="${k}" aria-selected="${S.tab===k}">${n}${en?` <span class="en">${en}</span>`:""}${c!==null?` <span class="dot ${c?"":"zero"}">${c}</span>`:""}</button>`).join("");
+  updateTabScrollHint();
 }
 
 function optBtn(skill,step,id,html,tag){
@@ -1024,7 +1053,7 @@ function toggle(skill,step,id){
 document.addEventListener("click",e=>{
   const b=e.target.closest("button"); if(!b) return;
   const d=b.dataset;
-  if(d.tab){S.tab=d.tab;render();window.scrollTo({top:0});return;}
+  if(d.tab){S.tab=d.tab;render();return;}
   if(b.id==="do-export"){doExport(b);return;}
   if(b.id==="do-preview"){openPreview();return;}
   if(d.part!==undefined){const i=+d.part,v=+d.v;S.rep.part[i]=S.rep.part[i]===v?0:v;render();return;}

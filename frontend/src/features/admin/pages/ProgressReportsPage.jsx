@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import AdminNavbar from "../../../shared/components/AdminNavbar";
 import { apiPath, authFetch } from "../../../shared/utils/api";
 import "./ProgressReportsPage.css";
@@ -17,13 +18,57 @@ const REPORT_TOOLS = [
 ];
 
 const ProgressReportsPage = () => {
-  const [activeReportId, setActiveReportId] = useState(REPORT_TOOLS[0].id);
+  const [searchParams] = useSearchParams();
   const [reportHtml, setReportHtml] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [reportError, setReportError] = useState("");
-  const activeReport = REPORT_TOOLS.find((report) => report.id === activeReportId) || REPORT_TOOLS[0];
+  const frameResizeObserverRef = useRef(null);
+  const selectedReportId = searchParams.get("report");
+  const activeReport =
+    REPORT_TOOLS.find((report) => report.id === selectedReportId) || REPORT_TOOLS[0];
+
+  const resizeReportFrame = useCallback((event) => {
+    frameResizeObserverRef.current?.disconnect();
+
+    const frame = event.currentTarget;
+    const frameDocument = frame.contentDocument;
+    if (!frameDocument?.documentElement || !frameDocument.body) {
+      setReportError("Không thể hiển thị đầy đủ mẫu báo cáo.");
+      return;
+    }
+
+    const updateHeight = () => {
+      const { body, documentElement } = frameDocument;
+      const height = Math.max(
+        body.scrollHeight,
+        body.offsetHeight,
+        documentElement.scrollHeight,
+        documentElement.offsetHeight
+      );
+      if (height > 0) frame.style.height = `${height}px`;
+    };
+
+    updateHeight();
+
+    const ResizeObserverConstructor = frame.contentWindow?.ResizeObserver;
+    if (ResizeObserverConstructor) {
+      const observer = new ResizeObserverConstructor(updateHeight);
+      observer.observe(frameDocument.documentElement);
+      observer.observe(frameDocument.body);
+      frameResizeObserverRef.current = observer;
+    }
+  }, []);
+
+  useEffect(
+    () => () => {
+      frameResizeObserverRef.current?.disconnect();
+    },
+    []
+  );
 
   useEffect(() => {
+    frameResizeObserverRef.current?.disconnect();
+    frameResizeObserverRef.current = null;
     let isCurrent = true;
 
     setReportHtml("");
@@ -58,6 +103,8 @@ const ProgressReportsPage = () => {
     void loadReport();
     return () => {
       isCurrent = false;
+      frameResizeObserverRef.current?.disconnect();
+      frameResizeObserverRef.current = null;
     };
   }, [activeReport.id]);
 
@@ -65,37 +112,10 @@ const ProgressReportsPage = () => {
     <>
       <AdminNavbar />
       <main className="progressReportsPage">
-        <header className="progressReportsPage__header">
-          <div>
-            <h1>Progress Reports</h1>
-            <p>Chọn bộ mẫu nhận xét để tạo báo cáo và xuất Word hoặc PDF.</p>
-          </div>
-        </header>
-
-        <div className="progressReportsPage__tabs" role="tablist" aria-label="Report type">
-          {REPORT_TOOLS.map((report) => (
-            <button
-              key={report.id}
-              id={`progress-report-tab-${report.id}`}
-              type="button"
-              role="tab"
-              aria-selected={activeReport.id === report.id}
-              aria-controls="progress-report-panel"
-              className={`progressReportsPage__tab${
-                activeReport.id === report.id ? " progressReportsPage__tab--active" : ""
-              }`}
-              onClick={() => setActiveReportId(report.id)}
-            >
-              {report.label}
-            </button>
-          ))}
-        </div>
-
         <section
           id="progress-report-panel"
           className="progressReportsPage__panel"
-          role="tabpanel"
-          aria-labelledby={`progress-report-tab-${activeReport.id}`}
+          aria-label={`${activeReport.label} progress report`}
         >
           {isLoading && (
             <p className="progressReportsPage__status" role="status">
@@ -113,6 +133,7 @@ const ProgressReportsPage = () => {
               className="progressReportsPage__frame"
               srcDoc={reportHtml}
               title={activeReport.title}
+              onLoad={resizeReportFrame}
             />
           )}
         </section>
