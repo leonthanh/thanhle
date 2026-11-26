@@ -27,26 +27,11 @@
   color: #b91c1c;
 }
 
-.progressReportsPage__frame {
-  display: block;
-  width: 100%;
-  height: calc(100vh - 80px);
-  min-height: 480px;
-  border: 0;
-  background: #f2f5f8;
-}
-
 @media (max-width: 768px) {
   .progressReportsPage {
     min-height: calc(100vh - 56px);
     min-height: calc(100dvh - 56px);
     padding: 6px 6px 12px;
-  }
-
-  .progressReportsPage__frame {
-    height: calc(100vh - 62px);
-    min-height: calc(100vh - 62px);
-    min-height: calc(100dvh - 62px);
   }
 
   .progressReportsPage__status {
