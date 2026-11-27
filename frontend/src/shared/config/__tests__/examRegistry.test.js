@@ -5,7 +5,7 @@ import {
   parseSelectTestSearch,
   PREPARE_SKILLS,
 } from "../examRegistry";
-import { getQuestionTypesForTest } from "../questionTypes";
+import { getQuestionTypesForTest, TEST_CONFIGS } from "../questionTypes";
 
 describe("examRegistry General platform", () => {
   test("uses General as the default platform label", () => {
@@ -35,6 +35,10 @@ describe("examRegistry General platform", () => {
     expect(getQuestionTypesForTest(templateId).map(({ id }) => id)).toContain(
       expectedType
     );
+  });
+
+  test("sets Prepare Listening's default duration to 15 minutes", () => {
+    expect(TEST_CONFIGS["exam-listening-v1"].duration).toBe(15);
   });
 });
 

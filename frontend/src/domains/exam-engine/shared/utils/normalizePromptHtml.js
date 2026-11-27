@@ -41,4 +41,41 @@ export const normalizeQuillPromptHtml = (source = '') => {
   }
 };
 
+export const normalizeNotesCompletionParts = (parts) => {
+  if (!Array.isArray(parts)) return parts;
+
+  let changed = false;
+  const normalizedParts = parts.map((part) => {
+    if (!Array.isArray(part?.sections)) return part;
+
+    let partChanged = false;
+    const sections = part.sections.map((section) => {
+      const sectionType = section?.questionType || section?.questions?.[0]?.questionType;
+      if (sectionType !== 'notes-completion' || !Array.isArray(section.questions)) {
+        return section;
+      }
+
+      let sectionChanged = false;
+      const questions = section.questions.map((question) => {
+        if (typeof question?.notesText !== 'string') return question;
+        const notesText = normalizeQuillPromptHtml(question.notesText);
+        if (notesText === question.notesText) return question;
+
+        sectionChanged = true;
+        return { ...question, notesText };
+      });
+
+      if (!sectionChanged) return section;
+      partChanged = true;
+      return { ...section, questions };
+    });
+
+    if (!partChanged) return part;
+    changed = true;
+    return { ...part, sections };
+  });
+
+  return changed ? normalizedParts : parts;
+};
+
 export default normalizeQuillPromptHtml;

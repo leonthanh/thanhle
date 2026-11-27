@@ -4,6 +4,7 @@ import { apiPath, authFetch } from "../../../shared/utils/api";
 import { buildSelectTestPath } from "../../../shared/config/examRegistry";
 import ExamCoreTestBuilder from "../../exam-engine/shared/components/ExamCoreTestBuilder";
 import { isPrepareReadingWriting } from "../../prepare/prepareReadingWriting";
+import { PREPARE_LISTENING_DURATION_MINUTES } from "../../prepare/prepareListeningConfig";
 
 const SKILL_LABELS = {
   reading: "Reading",
@@ -92,6 +93,7 @@ const ExamLevelSkillBuilderPage = ({ code: codeOverride } = {}) => {
   const apiBasePath = `exam-levels/${encodeURIComponent(code)}/${encodeURIComponent(skill)}/tests`;
   const successPath = getExamLevelSkillBuilderSuccessPath(code, skill);
   const isPrepareSkill = code === "prepare" && skill === "reading-writing";
+  const isPrepareListening = code === "prepare" && skill === "listening";
   if (isPrepareSkill && !id && templateId !== "gateway-reading-writing") {
     return <div className="exam-level-page-state" role="alert">Prepare Reading & Writing cần cấu hình mẫu tương thích gateway-reading-writing.</div>;
   }
@@ -105,12 +107,17 @@ const ExamLevelSkillBuilderPage = ({ code: codeOverride } = {}) => {
         editId={id ? Number(id) : null}
         initialData={initialData}
         apiBasePath={apiBasePath}
-        durationMinutes={level.skillConfig[skill].durationMinutes}
+        durationMinutes={
+          isPrepareListening
+            ? PREPARE_LISTENING_DURATION_MINUTES
+            : level.skillConfig[skill].durationMinutes
+        }
         displayName={`${level.name} ${skillName}`}
         successPathResolver={() => successPath}
         resetDraftOnLoad={!id && !isPrepareSkill}
         prepareReadingWriting={useLegacyPrepareFormat}
         prepareFlexibleReadingWriting={useFlexiblePrepareFormat}
+        prepareListening={isPrepareListening}
         draftStorageKey={isPrepareSkill ? `examLevelDraft-${code}-${skill}-${id || "new"}` : undefined}
       />
     </>

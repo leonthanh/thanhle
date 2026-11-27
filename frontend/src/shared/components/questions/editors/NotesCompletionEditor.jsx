@@ -17,6 +17,7 @@ const NotesCompletionEditor = ({
   onChange,
   startingNumber = 1,
   styles = {},
+  testType = '',
 }) => {
   // Default styles
   const defaultStyles = {
@@ -42,6 +43,7 @@ const NotesCompletionEditor = ({
   const notesText = question.notesText || '';
   const notesTitle = question.notesTitle || '';
   const wordLimit = question.wordLimit || 'ONE WORD ONLY';
+  const scoreNote = question.scoreNote || '';
   const answers = question.answers || {};
 
   const stripHtml = (html) => {
@@ -136,13 +138,13 @@ const NotesCompletionEditor = ({
         border: "1px solid #86efac",
         fontSize: "13px",
       }}>
-        <strong>Hướng dẫn:</strong> Paste notes vào ô bên dưới. Dùng <code>___</code> hoặc <code>31 ___</code> để đánh dấu chỗ trống.
+        <strong>Hướng dẫn:</strong> Dán nội dung dạng form/notes vào ô bên dưới. Dùng <code>___</code> hoặc <code>31 ___</code> để đánh dấu chỗ trống.
         <br/>
         VD: <code>People moved to cities to work in the 31 ___</code>
       </div>
 
       {/* Title */}
-      <label style={defaultStyles.label}>Tiêu đề Notes</label>
+      <label style={defaultStyles.label}>Tiêu đề Form/Notes</label>
       <input
         type="text"
         value={notesTitle}
@@ -161,18 +163,33 @@ const NotesCompletionEditor = ({
         <option value="ONE WORD ONLY">ONE WORD ONLY</option>
         <option value="NO MORE THAN TWO WORDS">NO MORE THAN TWO WORDS</option>
         <option value="NO MORE THAN THREE WORDS">NO MORE THAN THREE WORDS</option>
+        <option value="NO MORE THAN THREE WORDS OR A NUMBER">NO MORE THAN THREE WORDS OR A NUMBER</option>
         <option value="ONE WORD AND/OR A NUMBER">ONE WORD AND/OR A NUMBER</option>
         <option value="NO MORE THAN TWO WORDS AND/OR A NUMBER">NO MORE THAN TWO WORDS AND/OR A NUMBER</option>
       </select>
 
+      {testType === 'exam-listening-v1' && (
+        <>
+          <label htmlFor="notes-completion-score-note" style={defaultStyles.label}>Ghi chú điểm (footer)</label>
+          <input
+            id="notes-completion-score-note"
+            type="text"
+            value={scoreNote}
+            onChange={(e) => onChange("scoreNote", e.target.value)}
+            placeholder="____/5 (1 mark per answer)"
+            style={defaultStyles.input}
+          />
+        </>
+      )}
+
       {/* Notes Text Input */}
-      <label style={defaultStyles.label}>Nội dung Notes (paste từ đề)</label>
+      <label style={defaultStyles.label}>Nội dung Form/Notes (paste từ đề)</label>
       <ReactQuill
         theme="snow"
         value={notesText}
         onChange={(value) => onChange("notesText", value)}
         modules={quillModules}
-        placeholder={`Paste nội dung notes ở đây. Dùng ___ để đánh dấu chỗ trống.
+        placeholder={`Paste nội dung form/notes ở đây. Dùng ___ để đánh dấu chỗ trống.
 
 VD:
 – During the Industrial Revolution people moved to cities to work in the 31 ___
@@ -277,6 +294,17 @@ VD:
               }}
               dangerouslySetInnerHTML={{ __html: generatePreview() }}
             />
+            {scoreNote && (
+              <div style={{
+                marginTop: "12px",
+                textAlign: "right",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "#92400e",
+              }}>
+                {scoreNote}
+              </div>
+            )}
           </div>
         </div>
       )}

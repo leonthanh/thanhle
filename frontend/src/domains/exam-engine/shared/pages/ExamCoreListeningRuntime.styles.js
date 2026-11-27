@@ -24,6 +24,7 @@ const createStyles = (isDarkMode = false, examType = 'CAMBRIDGE') => {
         warning: "#f59e0b",
       };
 
+  const badgeColor = examType === 'PREPARE' ? '#c2410c' : colors.primary;
   const isBig = examType === 'MOVERS' || examType === 'STARTERS';
 
   return {
@@ -392,7 +393,7 @@ const createStyles = (isDarkMode = false, examType = 'CAMBRIDGE') => {
     justifyContent: 'center',
     width: '28px',
     height: '28px',
-    backgroundColor: colors.primary,
+    backgroundColor: badgeColor,
     color: '#fff',
     borderRadius: '50%',
     fontWeight: 600,
@@ -463,7 +464,7 @@ const createStyles = (isDarkMode = false, examType = 'CAMBRIDGE') => {
     height: '26px',
     marginRight: '10px',
     borderRadius: '6px',
-    backgroundColor: colors.primary,
+    backgroundColor: badgeColor,
     color: '#ffffff',
     fontWeight: 700,
     fontSize: '12px',

@@ -49,6 +49,7 @@ export const OpenClozeSectionDisplay = ({
   const passageText = container.passageText || container.passage || '';
   const normalizedPassageText = normalizeClozeHtml(passageText);
   const passageTitle = container.passageTitle || '';
+  const scoreNote = String(container.scoreNote || '').trim();
   let blanks = Array.isArray(container.blanks) ? container.blanks : [];
 
   if (!blanks.length && passageText) {
@@ -284,6 +285,19 @@ export const OpenClozeSectionDisplay = ({
         }}
       >
         {renderPassageWithInputs()}
+        {scoreNote && (
+          <div
+            style={{
+              marginTop: '14px',
+              textAlign: 'right',
+              fontSize: '14px',
+              fontWeight: 700,
+              color: isDarkMode ? '#cbd5e1' : '#334155',
+            }}
+          >
+            {scoreNote}
+          </div>
+        )}
       </div>
     </div>
   );

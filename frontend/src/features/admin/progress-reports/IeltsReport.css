@@ -1,0 +1,389 @@
+.ieltsReport .scard {
+  margin-bottom: 16px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.ieltsReport .sc-h {
+  padding: 12px 16px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.ieltsReport .sc-h h3 {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.ieltsReport .sc-h small {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.ieltsReport .sc-hx {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ieltsReport .sc-b {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px 190px;
+  gap: 16px;
+  align-items: start;
+  padding: 14px 16px;
+}
+
+.ieltsReport .parts-in {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 10px;
+}
+
+.ieltsReport .parts-in input {
+  text-align: center;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ieltsReport .ff .lbl i {
+  color: var(--muted);
+  font-weight: 500;
+  font-style: normal;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.ieltsReport .ff.tot b {
+  padding: 4px 0;
+  color: var(--teal);
+  font-size: 1.3rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ieltsReport .bandbox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  color: #fff;
+  background: var(--navy);
+  border-radius: 10px;
+}
+
+.ieltsReport .bandbox .lbl {
+  color: #cfe0f5;
+}
+
+.ieltsReport .bandbox b {
+  font-family: var(--f-display);
+  font-size: 2.3rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.ieltsReport .bandbox small {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.ieltsReport .ctb-wrap {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.ieltsReport .ctb {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ieltsReport .ctb th,
+.ieltsReport .ctb td {
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--line);
+}
+
+.ieltsReport .ctb tbody th {
+  font-weight: 400;
+}
+
+.ieltsReport .ctb th b {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.ieltsReport .ctb th small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.ieltsReport .ctb thead th {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ieltsReport .ctb td {
+  width: 96px;
+}
+
+.ieltsReport .ctb select {
+  min-width: 66px;
+  padding: 5px 8px;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+.ieltsReport .ctb tr.tb-tot th,
+.ieltsReport .ctb tr.tb-tot td {
+  color: var(--teal);
+  font-weight: 700;
+  border-bottom: 0;
+}
+
+.ieltsReport .ctb tr.tb-adj th,
+.ieltsReport .ctb tr.tb-adj td {
+  border-bottom: 0;
+}
+
+.ieltsReport .ctb tr.tb-adj input {
+  width: 72px;
+  padding: 5px 8px;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+.ieltsReport .ctb small.adj {
+  display: block;
+  color: var(--warn);
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+.ieltsReport .rng {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 10px 16px 0;
+}
+
+.ieltsReport .rng .lbl {
+  margin-right: 4px;
+}
+
+.ieltsReport .rng button[data-rng] {
+  padding: 3px 10px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.ieltsReport .rng button[aria-pressed="true"],
+.ieltsReport .groups button[aria-pressed="true"] {
+  color: var(--teal);
+  font-weight: 600;
+  background: var(--teal-soft);
+  border-color: var(--teal);
+}
+
+.ieltsReport .dot.ov {
+  padding: 0 8px;
+}
+
+.ieltsReport .res-wrap {
+  padding: 12px 16px 4px;
+  overflow-x: auto;
+}
+
+.ieltsReport .res {
+  width: 100%;
+  min-width: 460px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.ieltsReport .res th {
+  padding: 6px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.ieltsReport .res td {
+  padding: 8px 6px;
+  text-align: center;
+  border-top: 1px solid var(--line);
+}
+
+.ieltsReport .res td b {
+  display: block;
+  font-family: var(--f-display);
+  font-size: 1.6rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ieltsReport .res td small {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.ieltsReport .res td.off {
+  opacity: 0.35;
+}
+
+.ieltsReport .res .ovc {
+  background: var(--warn-soft);
+}
+
+.ieltsReport .res td.ovc b {
+  color: #c62832;
+}
+
+.ieltsReport .res tr.incs td {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.ieltsReport .res tr.incs .chk {
+  justify-content: center;
+  font-size: 0.75rem;
+}
+
+.ieltsReport .res-note {
+  margin: 0;
+  padding: 4px 16px 14px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.ieltsReport .res td small.nodet {
+  display: block;
+  color: var(--warn);
+  font-size: 0.7rem;
+}
+
+.ieltsReport .ov-big {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: baseline;
+  padding: 10px 14px;
+  color: #fff;
+  background: var(--navy);
+  border-radius: 10px;
+}
+
+.ieltsReport .ov-big span {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.ieltsReport .ov-big b {
+  font-family: var(--f-display);
+  font-size: 2.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.ieltsReport .ov-big small {
+  opacity: 0.85;
+}
+
+.ieltsReport .exp-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 8px;
+}
+
+.ieltsReport .ff.tin {
+  max-width: 260px;
+}
+
+.ieltsReport .ff.tin input {
+  font-size: 1.15rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.ieltsReport .pv-body .big {
+  color: #153a80;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.ieltsReport .pv-body .big.red,
+.ieltsReport .pv-body .tb .tot td.big.red {
+  color: #d7242e;
+}
+
+.ieltsReport .pv-body .ovt .hd td.ovh {
+  background: #d7242e;
+  border-color: #d7242e;
+}
+
+.ieltsReport .pv-body p.hl {
+  margin: 4px 0 2px;
+  color: #153a80;
+  font-weight: 700;
+}
+
+.ieltsReport .pv-body p.bl {
+  padding-left: 12px;
+  margin: 0 0 2px;
+  text-indent: -10px;
+}
+
+.ieltsReport .pv-body .note {
+  margin-top: 4px;
+  color: #5b6b85;
+  font-size: 11px;
+  font-style: italic;
+}
+
+@media (max-width: 980px) {
+  .ieltsReport .sc-b {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .ieltsReport .sc-b > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 520px) {
+  .ieltsReport .sc-b {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ieltsReport .sc-b > :first-child {
+    grid-column: auto;
+  }
+
+  .ieltsReport .exp-actions {
+    grid-template-columns: 1fr;
+  }
+}

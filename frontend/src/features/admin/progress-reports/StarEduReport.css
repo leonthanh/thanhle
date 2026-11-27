@@ -1,0 +1,290 @@
+/* Layout: report-header band, skill tabs, then a two-column workbench — the 3-step formula on the left, the live comment sheet on the right (stacks on phones). Colors follow the navy/teal of the printed report forms. */
+.starEduReport{
+  --bg:#F2F5F8; --surface:#FFFFFF; --surface-2:#F7F9FB; --ink:#15263A; --muted:#5A6A7C; --line:#D7E0E9;
+  --navy:#12365A; --navy-ink:#FFFFFF; --teal:#1B7472; --teal-soft:#E2F1F0; --warn:#A85A12; --warn-soft:#FBF0E4;
+  --good:#2D7A4C; --good-soft:#E5F3EA; --prog:#1F5FA3; --prog-soft:#E5EEF9; --weak:#A8650A; --weak-soft:#FAF0DF; --spec:#76479A; --spec-soft:#F1E9F7;
+  --f-display:"Lora",Georgia,"Times New Roman",serif; --f-body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --r:10px;
+  color:var(--ink);
+}
+@media (prefers-color-scheme: dark){.starEduReport:not([data-theme="light"]){
+  --bg:#0E1620; --surface:#16212D; --surface-2:#1B2836; --ink:#E4EBF2; --muted:#98A8B9; --line:#2A3A4B;
+  --navy:#1C4A75; --navy-ink:#FFFFFF; --teal:#5BC2BE; --teal-soft:#183533; --warn:#F0A65E; --warn-soft:#3A2A18;
+  --good:#6FCB94; --good-soft:#18301F; --prog:#7FB2EE; --prog-soft:#172A40; --weak:#E9B04F; --weak-soft:#352812; --spec:#C49BE6; --spec-soft:#2B1F38; color-scheme:dark}}
+.starEduReport[data-theme="dark"]{
+  --bg:#0E1620; --surface:#16212D; --surface-2:#1B2836; --ink:#E4EBF2; --muted:#98A8B9; --line:#2A3A4B;
+  --navy:#1C4A75; --navy-ink:#FFFFFF; --teal:#5BC2BE; --teal-soft:#183533; --warn:#F0A65E; --warn-soft:#3A2A18;
+  --good:#6FCB94; --good-soft:#18301F; --prog:#7FB2EE; --prog-soft:#172A40; --weak:#E9B04F; --weak-soft:#352812; --spec:#C49BE6; --spec-soft:#2B1F38; color-scheme:dark}
+.starEduReport *{box-sizing:border-box}
+.starEduReport [hidden]{display:none!important}
+.starEduReport img{max-width:100%}
+.starEduReport button,.starEduReport input,.starEduReport select,.starEduReport textarea{font:inherit;color:inherit}
+.starEduReport :focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.starEduReport .wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+.starEduReport header.band{background:var(--navy);color:var(--navy-ink)}
+.starEduReport header.band .wrap{padding-block:16px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px 20px;align-items:start}
+.starEduReport header.band .meta{grid-column:1/-1}
+.starEduReport .org{font-size:.72rem;font-weight:700;letter-spacing:.09em;color:#CFE0F5;margin-bottom:4px}
+.starEduReport .logo{height:74px;width:auto;background:#fff;border-radius:10px;padding:6px 10px;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+@media (max-width:560px){.starEduReport .logo{height:44px;padding:4px 7px}}
+.starEduReport .btn-ghost.danger{border-color:rgba(255,160,160,.6);color:#FFD6D6}
+.starEduReport .btn-ghost.danger:hover{background:rgba(215,36,46,.35)}
+.starEduReport .brand h1{font-family:var(--f-display);font-size:1.45rem;margin:0;letter-spacing:.01em;text-wrap:balance}
+.starEduReport .brand p{margin:2px 0 0;font-size:.82rem;opacity:.78}
+.starEduReport .meta{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end}
+.starEduReport .meta label{display:flex;flex-direction:column;gap:3px;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;opacity:.9}
+.starEduReport .meta input,.starEduReport .meta select{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:7px;padding:6px 9px;min-width:0;font-size:.9rem;text-transform:none;letter-spacing:0}
+.starEduReport .meta input{width:190px}
+.starEduReport .meta input::placeholder{color:rgba(255,255,255,.55)}
+.starEduReport .meta select option{color:#15263A}
+.starEduReport .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:7px;padding:6px 12px;cursor:pointer;font-size:.85rem}
+.starEduReport .btn-ghost:hover{background:rgba(255,255,255,.12)}
+@media (max-width:560px){
+  .starEduReport header.band .wrap{padding-block:10px 12px;gap:8px 10px}
+  .starEduReport .org{font-size:.62rem;line-height:1.35;letter-spacing:.04em;margin-bottom:3px}
+  .starEduReport .brand h1{font-size:1.05rem;line-height:1.2}
+  .starEduReport .brand p{font-size:.72rem;line-height:1.35}
+  .starEduReport .logo{height:36px;padding:3px 5px}
+  .starEduReport .meta{gap:7px 8px;align-items:stretch}
+  .starEduReport .meta label{flex:1 1 125px;min-width:0;font-size:.62rem;gap:2px}
+  .starEduReport .meta input{width:100%;box-sizing:border-box}
+  .starEduReport .meta select{max-width:100%;box-sizing:border-box}
+  .starEduReport .meta input,.starEduReport .meta select{padding:5px 7px;font-size:.8rem}
+  .starEduReport .btn-ghost{padding:5px 8px;font-size:.75rem}
+  .starEduReport nav.tabs button{padding:9px 10px 8px;font-size:.84rem;gap:5px}
+  .starEduReport .dot{min-width:17px;height:17px;font-size:.65rem}
+}
+
+.starEduReport nav.tabs{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.starEduReport nav.tabs.tabs--can-scroll-left::before,.starEduReport nav.tabs.tabs--can-scroll-right::after{position:absolute;top:0;bottom:0;z-index:6;display:grid;place-items:center;width:26px;pointer-events:none;color:var(--teal);font-size:1.3rem;font-weight:800}
+.starEduReport nav.tabs.tabs--can-scroll-left::before{content:"‹";left:0;background:linear-gradient(90deg,var(--surface) 30%,transparent)}
+.starEduReport nav.tabs.tabs--can-scroll-right::after{content:"›";right:0;background:linear-gradient(270deg,var(--surface) 30%,transparent)}
+.starEduReport nav.tabs .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.starEduReport nav.tabs button{border:0;background:none;padding:12px 14px 10px;cursor:pointer;color:var(--muted);font-weight:500;border-bottom:3px solid transparent;white-space:nowrap;display:flex;gap:8px;align-items:center}
+.starEduReport nav.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--teal)}
+.starEduReport nav.tabs .en{font-size:.75rem;opacity:.7;font-weight:400}
+.starEduReport .dot{min-width:20px;height:20px;border-radius:10px;background:var(--teal-soft);color:var(--teal);font-size:.72rem;font-weight:700;display:inline-grid;place-items:center;padding:0 6px}
+.starEduReport .dot.zero{background:var(--surface-2);color:var(--muted)}
+
+.starEduReport main .wrap{padding-block:20px 48px}
+.starEduReport .bench{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:900px){.starEduReport .bench{grid-template-columns:minmax(0,1fr)}}
+
+.starEduReport .setup{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
+.starEduReport .field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.starEduReport .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.starEduReport .seg{display:flex;flex-wrap:wrap;gap:6px}
+.starEduReport .seg button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:.85rem;color:var(--ink)}
+.starEduReport .seg button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.starEduReport .sit button[data-s="good"][aria-pressed="true"]{background:var(--good);border-color:var(--good);color:#fff}
+.starEduReport .sit button[data-s="prog"][aria-pressed="true"]{background:var(--prog);border-color:var(--prog);color:#fff}
+.starEduReport .sit button[data-s="weak"][aria-pressed="true"]{background:var(--weak);border-color:var(--weak);color:#fff}
+.starEduReport .sit button[data-s="spec"][aria-pressed="true"]{background:var(--spec);border-color:var(--spec);color:#fff}
+.starEduReport:not([data-theme="light"]) .sit button[aria-pressed="true"]{color:#fff}
+@media (prefers-color-scheme: light){.starEduReport:not([data-theme="dark"]) .sit button[aria-pressed="true"]{color:#fff}}
+.starEduReport[data-theme="light"] .sit button[aria-pressed="true"]{color:#fff}
+.starEduReport .score{display:flex;gap:8px;align-items:center}
+.starEduReport .score input{width:72px;border:1px solid var(--line);border-radius:7px;padding:5px 8px;background:var(--surface);font-variant-numeric:tabular-nums}
+.starEduReport .grade{font-size:.8rem;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
+
+.starEduReport .step{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
+.starEduReport .step-h{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--surface-2)}
+.starEduReport .step-t{display:flex;gap:10px;align-items:baseline}
+.starEduReport .step-n{font-family:var(--f-display);font-weight:700;color:var(--teal);font-size:1.15rem}
+.starEduReport .step-t h3{margin:0;font-size:.98rem;font-weight:600}
+.starEduReport .step-t small{color:var(--muted);font-size:.8rem}
+.starEduReport .groups{display:flex;flex-wrap:wrap;gap:6px}
+.starEduReport .groups button{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:3px 10px;cursor:pointer;font-size:.8rem;color:var(--muted)}
+.starEduReport .groups button[aria-pressed="true"][data-g="good"]{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.starEduReport .groups button[aria-pressed="true"][data-g="prog"]{background:var(--prog-soft);border-color:var(--prog);color:var(--prog)}
+.starEduReport .groups button[aria-pressed="true"][data-g="weak"]{background:var(--weak-soft);border-color:var(--weak);color:var(--weak)}
+.starEduReport .groups button[aria-pressed="true"][data-g="spec"]{background:var(--spec-soft);border-color:var(--spec);color:var(--spec)}
+.starEduReport .groups button[aria-pressed="true"][data-g="adv"],.starEduReport .groups button[aria-pressed="true"][data-g="tips"],.starEduReport .groups button[aria-pressed="true"][data-g="x"]{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
+.starEduReport .crit{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px 0}
+.starEduReport .crit .lbl{align-self:center;margin-right:4px}
+.starEduReport .list{list-style:none;margin:0;padding:10px;display:grid;gap:6px}
+.starEduReport .opt{display:grid;grid-template-columns:26px minmax(0,1fr);gap:10px;align-items:start;width:100%;text-align:left;border:1px solid transparent;background:none;border-radius:8px;padding:8px 10px;cursor:pointer;color:var(--ink);line-height:1.45}
+.starEduReport .opt:hover{background:var(--surface-2);border-color:var(--line)}
+.starEduReport .opt .box{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:.75rem;font-weight:700;color:transparent;margin-top:1px;font-variant-numeric:tabular-nums}
+.starEduReport .opt[aria-pressed="true"]{background:var(--teal-soft);border-color:var(--teal)}
+.starEduReport .opt[aria-pressed="true"] .box{background:var(--teal);border-color:var(--teal);color:#fff}
+.starEduReport .opt b{font-weight:600}
+.starEduReport .opt .tag{font-size:.72rem;color:var(--muted);margin-left:6px;white-space:nowrap}
+.starEduReport .ph{background:var(--warn-soft);color:var(--warn);border-radius:4px;padding:0 3px}
+.starEduReport .add{display:flex;gap:8px;padding:0 16px 14px}
+.starEduReport .add input{flex:1;min-width:0;border:1px dashed var(--line);border-radius:7px;padding:7px 10px;background:var(--surface)}
+.starEduReport .add button,.starEduReport .btn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:6px 12px;cursor:pointer;font-size:.85rem;white-space:nowrap}
+.starEduReport .btn:hover,.starEduReport .add button:hover{border-color:var(--teal);color:var(--teal)}
+.starEduReport .btn.primary{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+.starEduReport .btn.primary:hover{filter:brightness(1.07);color:#fff}
+.starEduReport .empty{color:var(--muted);font-size:.86rem;padding:6px 10px 12px}
+
+.starEduReport .sheet{position:sticky;top:calc(env(safe-area-inset-top,0px) + 62px);background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+@media (max-width:900px){.starEduReport .sheet{position:static}}
+.starEduReport .sheet-h{background:var(--navy);color:var(--navy-ink);padding:12px 16px;display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.starEduReport .sheet-h h2{font-family:var(--f-display);font-size:1.05rem;margin:0}
+.starEduReport .sheet-h span{font-size:.78rem;opacity:.85}
+.starEduReport .formula{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line);font-size:.75rem;color:var(--muted)}
+.starEduReport .formula i{font-style:normal;padding:2px 8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line)}
+.starEduReport .formula i.on{background:var(--teal-soft);border-color:var(--teal);color:var(--teal);font-weight:600}
+.starEduReport .sheet textarea{display:block;width:100%;min-height:230px;border:0;resize:vertical;padding:14px 16px;background:var(--surface);line-height:1.6;font-size:.95rem}
+.starEduReport .sheet textarea:focus-visible{outline:none;box-shadow:inset 0 0 0 2px var(--teal)}
+.starEduReport .notice{margin:0 16px 10px;padding:8px 10px;border-radius:7px;font-size:.8rem;display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.starEduReport .notice.warn{background:var(--warn-soft);color:var(--warn)}
+.starEduReport .notice.info{background:var(--prog-soft);color:var(--prog)}
+.starEduReport .notice button{background:none;border:1px solid currentColor;color:inherit;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:.78rem}
+.starEduReport .sheet-f{display:flex;gap:8px;justify-content:space-between;align-items:center;padding:12px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
+.starEduReport .sheet-f .meta-s{font-size:.78rem;color:var(--muted)}
+.starEduReport .sel{border-top:1px solid var(--line)}
+.starEduReport .sel-h{padding:10px 16px 2px;font-size:.78rem;font-weight:600;color:var(--ink)}
+.starEduReport .sel-h small{font-weight:400;color:var(--muted);margin-left:6px}
+.starEduReport .picked{list-style:none;margin:0;padding:6px 10px 12px;display:grid;gap:4px}
+.starEduReport .picked li{border:1px solid var(--line);border-radius:7px;padding:6px 6px;background:var(--surface);cursor:grab}
+.starEduReport .picked li.dragging{opacity:.4}
+.starEduReport .picked li.over-top{box-shadow:inset 0 3px 0 var(--teal)}
+.starEduReport .picked li.over-bot{box-shadow:inset 0 -3px 0 var(--teal)}
+.starEduReport .picked .grip{color:var(--muted);letter-spacing:-2px;font-size:.8rem;line-height:1.5;user-select:none}
+.starEduReport .picked .tx2{flex:1;min-width:0;color:var(--ink)}
+.starEduReport .picked .mv{display:flex;gap:0;align-items:flex-start}
+.starEduReport .picked .mv button:disabled{opacity:.25;cursor:default}
+.starEduReport .picked li{display:flex;gap:8px;align-items:flex-start;font-size:.8rem;color:var(--muted)}
+.starEduReport .picked button{border:0;background:none;color:var(--muted);cursor:pointer;font-size:.9rem;line-height:1;padding:2px 4px}
+.starEduReport .picked button:hover{color:var(--warn)}
+.starEduReport .picked .k{font-weight:700;color:var(--teal);min-width:16px}
+.starEduReport details.sel summary{cursor:pointer;padding:8px 16px;font-size:.8rem;color:var(--muted);border-top:1px solid var(--line)}
+
+.starEduReport .summary{display:grid;gap:14px;max-width:880px}
+.starEduReport .sum-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.starEduReport .sum-card h3{margin:0 0 6px;font-size:.95rem;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.starEduReport .sum-card p{margin:0;white-space:pre-wrap;line-height:1.6}
+.starEduReport .sum-card .none{color:var(--muted);font-style:italic}
+.starEduReport .sum-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.starEduReport .sum-top h2{font-family:var(--f-display);margin:0;font-size:1.3rem}
+.starEduReport .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:9px 16px;border-radius:8px;font-size:.88rem;opacity:0;pointer-events:none;transition:opacity .2s}
+.starEduReport .toast.show{opacity:1}
+@media (prefers-reduced-motion:reduce){.starEduReport .toast{transition:none}}
+.starEduReport .hint{font-size:.8rem;color:var(--muted);margin:0 0 14px}
+
+.starEduReport .exp{min-width:0}
+.starEduReport .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px 16px;padding:14px 16px}
+.starEduReport .grid.att{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.starEduReport .ff{display:flex;flex-direction:column;gap:5px;min-width:0}
+.starEduReport .ff input{border:1px solid var(--line);border-radius:7px;padding:7px 10px;background:var(--surface);min-width:0;width:100%}
+.starEduReport .chk{display:flex;gap:6px;align-items:center;font-size:.85rem;cursor:pointer}
+.starEduReport .sk-sum{list-style:none;margin:0;padding:8px 16px 12px;display:grid}
+.starEduReport .sk-sum li{display:grid;grid-template-columns:minmax(80px,1fr) minmax(0,1.2fr) minmax(0,1.2fr);gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:.88rem;font-variant-numeric:tabular-nums}
+.starEduReport .sk-sum li:last-child{border-bottom:0}
+.starEduReport .sk-sum li span{color:var(--muted)}
+.starEduReport .sk-sum li.avg b,.starEduReport .sk-sum li.avg span{color:var(--teal);font-weight:600}
+.starEduReport .sk-sum.off,.starEduReport .grid.off,.starEduReport .parts.off{opacity:.4}
+.starEduReport .sk-sum li span.over{color:var(--warn);font-weight:600}
+.starEduReport .ff select{border:1px solid var(--line);border-radius:7px;padding:7px 10px;background:var(--surface);min-width:0;width:100%}
+.starEduReport .parts{display:grid;padding:6px 16px 12px}
+.starEduReport .prow{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:.9rem}
+.starEduReport .prow:last-child{border-bottom:0}
+.starEduReport .prow span{flex:1 1 220px;min-width:0}
+.starEduReport .prow .seg button{width:36px;padding:5px 0;text-align:center;font-variant-numeric:tabular-nums}
+.starEduReport .txs{display:grid;gap:14px;padding:14px 16px}
+.starEduReport .tx-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap}
+.starEduReport .tx textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:9px 11px;background:var(--surface);line-height:1.55;resize:vertical;min-height:96px}
+.starEduReport .auto{font-size:.75rem;color:var(--teal)}
+.starEduReport .link{background:none;border:0;color:var(--teal);cursor:pointer;font-size:.8rem;text-decoration:underline;padding:0}
+.starEduReport .exp-body{padding:16px;display:grid;gap:12px}
+.starEduReport .exp-body .notice{margin:0}
+.starEduReport .exp-note{margin:0;font-size:.85rem;color:var(--muted)}
+.starEduReport .btn.big{padding:11px 16px;font-size:.95rem;width:100%}
+.starEduReport .btn:disabled{opacity:.6;cursor:progress}
+.starEduReport .exp-status{margin:0;font-size:.85rem;color:var(--teal);min-height:1.2em}
+.starEduReport .exp-status.warn{color:var(--warn)}
+.starEduReport .paper{aspect-ratio:210/105;max-width:100%;background:#fff;border:1px solid var(--line);border-radius:4px;padding:8% 9%;display:grid;gap:7px;align-content:start;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.starEduReport .paper-top{height:12px;border-radius:2px;background:linear-gradient(90deg,#153A80 0 18%,#CFE3F6 18% 100%);border-bottom:3px solid #D7242E;margin:-4% -4% 6%}
+.starEduReport .paper-l{height:7px;border-radius:2px;background:#153A80;justify-self:center}.starEduReport .w60{width:55%}.starEduReport .w40{width:35%;opacity:.4}
+.starEduReport .paper-t{height:16px;border-radius:2px;background:#EEF4FB;border:1px solid #C5D3E8}.starEduReport .paper-t.s{height:10px}
+.starEduReport .paper-red{height:2px;background:#D7242E;width:30%;margin-top:4px}
+
+.starEduReport .ovl{position:fixed;inset:0;background:rgba(10,20,35,.55);z-index:50;display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.starEduReport .dlg{background:var(--surface);color:var(--ink);border-radius:12px;max-width:460px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.35);display:flex;flex-direction:column;max-height:100%}
+.starEduReport .dlg.wide{max-width:900px;height:100%;max-height:100%}
+.starEduReport .dlg-h{display:flex;justify-content:space-between;align-items:center;padding:16px 18px 6px}
+.starEduReport .dlg-h h2{margin:0;font-family:var(--f-display);font-size:1.15rem}
+.starEduReport .dlg-h .x{border:0;background:none;font-size:1.5rem;line-height:1;cursor:pointer;color:var(--muted)}
+.starEduReport .dlg-b{padding:4px 18px 12px;overflow:auto;min-height:0;flex:1}
+.starEduReport .dlg-b>p{margin:6px 0;line-height:1.55;color:var(--muted)}
+.starEduReport .dlg-f{display:flex;gap:8px;justify-content:flex-end;align-items:center;flex-wrap:wrap;padding:12px 18px 16px;border-top:1px solid var(--line)}
+.starEduReport .dlg-note{flex:1 1 240px;font-size:.8rem;color:var(--muted)}
+.starEduReport .warnt{color:var(--warn)}
+.starEduReport .btn.danger{background:#C62832;border-color:#C62832;color:#fff;font-weight:600}
+.starEduReport .dlg.wide .dlg-b{background:var(--surface-2);padding:16px}
+.starEduReport .pv-paper{background:#fff;color:#1A2433;max-width:794px;margin:0 auto;box-shadow:0 2px 10px rgba(0,0,0,.18);font-family:Verdana,"Be Vietnam Pro",Arial,sans-serif;font-size:12px;line-height:1.45}
+.starEduReport .pv-top{aspect-ratio:1240/175;background-size:100% auto;background-position:top center;background-repeat:no-repeat}
+.starEduReport .pv-bot{aspect-ratio:1240/150;background-size:100% auto;background-position:bottom center;background-repeat:no-repeat;margin-top:18px}
+.starEduReport .pv-fallback{background:#153A80;color:#fff;font-weight:700;padding:14px 7%;font-size:13px;border-bottom:4px solid #D7242E}
+.starEduReport .pv-body{padding:6px 7.1% 0}
+.starEduReport .pv-body h1{text-align:center;color:#153A80;font-size:19px;margin:6px 0 2px;letter-spacing:.03em}
+.starEduReport .pv-body .sub{text-align:center;font-style:italic;color:#5B6B85;margin-bottom:14px}
+.starEduReport .pv-body h2{font-size:13px;color:#153A80;border-bottom:1.5px solid #D7242E;padding-bottom:3px;margin:16px 0 7px}
+.starEduReport .pv-body h2 span{color:#D7242E}
+.starEduReport .pv-body table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:inherit;color:inherit}
+.starEduReport .pv-body td,.starEduReport .pv-body th{padding:5px 7px;vertical-align:middle;text-align:left;word-wrap:break-word}
+.starEduReport .pv-body .info th{background:#EEF4FB;color:#153A80;font-size:10.5px;width:19%;border-bottom:1px solid #C5D3E8}
+.starEduReport .pv-body .info td{border-bottom:1px solid #C5D3E8;width:31%}
+.starEduReport .pv-body .tb td{border:1px solid #C5D3E8}
+.starEduReport .pv-body .tb tr:nth-child(odd):not(.hd) td{background:#F7FAFD}
+.starEduReport .pv-body .tb .hd td{background:#153A80;color:#fff;font-weight:700;font-size:11px;border-color:#153A80}
+.starEduReport .pv-body .tb .tot td{background:#EEF4FB !important;color:#5B6B85}
+.starEduReport .pv-body .tb i{color:#5B6B85;font-size:10.5px}
+.starEduReport .pv-body p{margin:0 0 4px}
+.starEduReport .pv-body .c{text-align:center}
+.starEduReport .pv-body .sc{font-weight:700;color:#153A80;font-size:13px}
+.starEduReport .pv-body .red,.starEduReport .pv-body .tb .tot td.red{color:#D7242E;font-weight:700;font-size:13px}
+.starEduReport .pv-body .box{color:#153A80;font-size:14px}
+.starEduReport .pv-body .tbox{background:#F7FAFD;border:1px solid #C5D3E8;padding:8px 10px;min-height:52px}
+.starEduReport .pv-body .phd{color:#9AAAC0;font-style:italic}
+.starEduReport .pv-body mark{background:#FBE7C6;color:#8A4B0B;padding:0 2px}
+.starEduReport .pv-body .sign{margin-top:20px}
+.starEduReport .pv-body .sign td{text-align:center;vertical-align:top;color:#153A80}
+.starEduReport .pv-body .sign i{color:#5B6B85;font-size:10.5px}
+.starEduReport .pv-body .sgap{height:46px}
+.starEduReport .pv-body .cap{font-weight:700;color:#153A80;margin:10px 0 4px}
+.starEduReport .pv-pages{display:flex;flex-direction:column;align-items:center;gap:18px;--pvz:1;position:relative}
+.starEduReport .pv-page{position:relative;flex:none;width:794px;height:1123px;background:#fff;background-size:100% 100%;background-repeat:no-repeat;box-shadow:0 2px 12px rgba(0,0,0,.22);zoom:var(--pvz);overflow:hidden;color:#1A2433;font-family:"Times New Roman",Times,serif;font-size:13.5px;line-height:1.4}
+.starEduReport .pv-page.nolh{border-top:6px solid #153A80}
+.starEduReport .pv-page .pv-in{position:absolute;left:57px;right:57px;top:113px;bottom:95px;overflow:hidden}
+.starEduReport .pv-body.pv-in,.starEduReport .pv-body.pv-measure{padding:0}
+.starEduReport .pv-measure{position:absolute;left:-10000px;top:0;visibility:hidden;font-family:"Times New Roman",Times,serif;font-size:13.5px;line-height:1.4}
+.starEduReport .pv-num{position:absolute;right:10px;bottom:6px;font:11px/1 system-ui,sans-serif;color:#8A97A8}
+.starEduReport .pv-body h1{margin-top:0}
+.starEduReport .prow .pnote{flex:1 1 100%;border:1px solid var(--line);border-radius:7px;padding:6px 10px;background:var(--surface);font-size:.85rem;min-width:0}
+.starEduReport .exp-actions{display:grid;grid-template-columns:1fr 1.4fr;gap:8px}
+.starEduReport nav.tabs{top:calc(env(safe-area-inset-top,0px) + 64px)}
+.starEduReport .sheet{top:calc(env(safe-area-inset-top,0px) + 126px)}
+.starEduReport .sheet-f__actions{display:flex;gap:8px}
+.starEduReport .criteria-setup{padding:10px 16px;align-items:flex-start}
+.starEduReport .criteria-setup__hint{margin:0}
+.starEduReport .sum-card__english{color:var(--muted);font-weight:400;font-size:.8rem}
+.starEduReport .sum-card__spacer{flex:1}
+.starEduReport .summary__hint{margin:0}
+.starEduReport .storage-notice{margin:0 0 16px}
+.starEduReport__preview-root{position:relative;z-index:50}
+
+@media (max-width:768px){
+  .starEduReport nav.tabs{top:calc(env(safe-area-inset-top,0px) + 56px)}
+  .starEduReport .sheet{top:calc(env(safe-area-inset-top,0px) + 118px)}
+}
+
+@page{size:A4 portrait;margin:0}
+@media print{
+  html,body{width:210mm!important;height:auto!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
+  body>*:not(.starEduReport__preview-root){display:none!important}
+  .starEduReport__preview-root{position:static!important;display:block!important;background:none!important}
+  .starEduReport__preview-root .ovl{position:static!important;inset:auto!important;display:block!important;padding:0!important;background:none!important;overflow:visible!important}
+  .starEduReport__preview-root .dlg{display:block!important;width:210mm!important;max-width:none!important;height:auto!important;max-height:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important}
+  .starEduReport__preview-root .dlg-h,.starEduReport__preview-root .dlg-f{display:none!important}
+  .starEduReport__preview-root .dlg-b{display:block!important;overflow:visible!important;padding:0!important;background:#fff!important}
+  .starEduReport__preview-root .pv-pages{display:block!important;position:static!important;width:auto!important;align-items:stretch!important;gap:0!important}
+  .starEduReport__preview-root .pv-page{width:210mm!important;height:297mm!important;margin:0!important;zoom:1!important;box-shadow:none!important;page-break-after:always!important;break-after:page!important}
+  .starEduReport__preview-root .pv-page:last-child{page-break-after:auto!important;break-after:auto!important}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
+

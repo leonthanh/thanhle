@@ -32,6 +32,13 @@ import {
 } from "../../../../shared/utils/runtimeSync";
 import { TEST_CONFIGS } from "../../../../shared/config/questionTypes";
 import {
+  PREPARE_LISTENING_AUDIO_PLAYS_PER_PART,
+  PREPARE_LISTENING_DURATION_MINUTES,
+  getPrepareListeningAudioPlaybackKey,
+  getPrepareListeningAudioPlaybackState,
+  normalizePrepareListeningAudioPlayCounts,
+} from "../../../prepare/prepareListeningConfig";
+import {
   computeQuestionStarts,
   countClozeBlanksFromText,
   countNotesCompletionBlanks,
@@ -41,9 +48,11 @@ import {
   getCurrentListeningAudioUrl,
   getListeningAudioMetadata,
 } from "../utils/examListeningAudio";
+import { normalizeNotesCompletionParts } from "../utils/normalizePromptHtml";
 import { ExamCoreQuestionDisplay, CompactExamCoreQuestionDisplay } from "../components/ExamCoreQuestionCards";
 import { ColourWriteStudentSection, DrawLinesQuestion, ImageTickSlideSection, LetterMatchingStudentSection } from "../components/ExamCoreListeningRuntimeSections";
 import { OpenClozeSectionDisplay, GapMatchSectionDisplay } from "../components/ExamCoreSectionDisplays";
+import { PrepareListeningSectionScoreNoteFooter } from "../components/PrepareListeningSectionScoreNote";
 import createStyles from "./ExamCoreListeningRuntime.styles";
 import './ExamCoreReadingRuntime.css';
 
@@ -116,12 +125,16 @@ const ExamCoreListeningRuntimePage = ({
     routeTestType.startsWith('gateway-') ? '/select-test?platform=gateway&tab=reading-writing' : '/cambridge'
   );
 
-  const styles = useMemo(() => createStyles(isDarkMode, examType), [isDarkMode, examType]);
-
   // States
   const [test, setTest] = useState(null);
+  const isPrepareListening =
+    String(test?.testType || routeTestType).trim().toLowerCase() === "exam-listening-v1";
   const isGatewayListening =
     String(test?.testType || routeTestType).trim().toLowerCase() === 'gateway-listening';
+  const styles = useMemo(
+    () => createStyles(isDarkMode, isPrepareListening ? 'PREPARE' : examType),
+    [isDarkMode, isPrepareListening, examType]
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [answers, setAnswers] = useState({});
@@ -140,6 +153,8 @@ const ExamCoreListeningRuntimePage = ({
   // Cambridge-style start gate (must click Play)
   const [testStarted, setTestStarted] = useState(false);
   const [startedAudioByPart, setStartedAudioByPart] = useState({});
+  const [prepareAudioPlayCountsByKey, setPrepareAudioPlayCountsByKey] = useState({});
+  const [audioEndedByKey, setAudioEndedByKey] = useState({});
   const [showAudioTip, setShowAudioTip] = useState(false);
   const [flaggedQuestions, setFlaggedQuestions] = useState(() => new Set());
   const [audioError, setAudioError] = useState(null);
@@ -148,6 +163,7 @@ const ExamCoreListeningRuntimePage = ({
   const [audioEnded, setAudioEnded] = useState(false);
 
   const audioRef = useRef(null);
+  const prepareAudioStartPendingRef = useRef(false);
   const questionRefs = useRef({});
   const maxPlayedTimeByPartRef = useRef({});
   const sharedAudioMaxPlayedTimeRef = useRef(0);
@@ -175,7 +191,10 @@ const ExamCoreListeningRuntimePage = ({
 
   // Get test config
   const testConfig = useMemo(() => {
-    return TEST_CONFIGS[routeTestType] || TEST_CONFIGS['ket-listening'];
+    const config = TEST_CONFIGS[routeTestType] || TEST_CONFIGS['ket-listening'];
+    return routeTestType === "exam-listening-v1"
+      ? { ...config, duration: PREPARE_LISTENING_DURATION_MINUTES }
+      : config;
   }, [routeTestType]);
 
   const localizedTestConfigName = useMemo(
@@ -281,14 +300,21 @@ const ExamCoreListeningRuntimePage = ({
         const data = await res.json();
 
         // Parse parts JSON
-        let parsedParts = typeof data.parts === "string"
+        const parts = typeof data.parts === "string"
           ? JSON.parse(data.parts)
           : data.parts;
+        const parsedParts = normalizeNotesCompletionParts(parts);
 
         const parsedData = {
           ...data,
           parts: parsedParts,
         };
+        const isPrepareListeningTest =
+          String(parsedData.testType || routeTestType).trim().toLowerCase() ===
+          "exam-listening-v1";
+        const restoredAudioMeta = isPrepareListeningTest
+          ? getListeningAudioMetadata(parsedData, routeTestType)
+          : null;
 
         setTest(parsedData);
         const initialSeconds = (testConfig.duration || 30) * 60;
@@ -311,6 +337,27 @@ const ExamCoreListeningRuntimePage = ({
             }
             if (saved?.activeQuestion) setActiveQuestion(saved.activeQuestion);
             if (saved?.startedAudioByPart) setStartedAudioByPart(saved.startedAudioByPart);
+            if (isPrepareListeningTest) {
+              setPrepareAudioPlayCountsByKey(
+                normalizePrepareListeningAudioPlayCounts(saved?.audioPlayCountsByKey, {
+                  startedAudioByPart: saved?.startedAudioByPart,
+                  isSingleFile: Boolean(restoredAudioMeta?.isSingleFile),
+                  testStarted: Boolean(saved?.testStarted),
+                  currentPartIndex: Number.isInteger(saved?.currentPartIndex)
+                    ? saved.currentPartIndex
+                    : 0,
+                  audioCurrentTime: saved?.audioCurrentTime,
+                })
+              );
+              const savedEndedByKey = saved?.audioEndedByKey;
+              setAudioEndedByKey(
+                savedEndedByKey &&
+                  typeof savedEndedByKey === "object" &&
+                  !Array.isArray(savedEndedByKey)
+                  ? savedEndedByKey
+                  : {}
+              );
+            }
             if (saved?.testStarted) {
               setTestStarted(true);
               setHasResumeAudio(true);
@@ -385,6 +432,31 @@ const ExamCoreListeningRuntimePage = ({
                 if (progressMeta.startedAudioByPart) {
                   setStartedAudioByPart(progressMeta.startedAudioByPart);
                 }
+                const serverCurrentPartIndex = Number.isInteger(progressMeta.currentPartIndex)
+                  ? progressMeta.currentPartIndex
+                  : 0;
+                const serverAudioPlayCounts = isPrepareListeningTest
+                  ? normalizePrepareListeningAudioPlayCounts(
+                      progressMeta.audioPlayCountsByKey,
+                      {
+                        startedAudioByPart: progressMeta.startedAudioByPart,
+                        isSingleFile: Boolean(restoredAudioMeta?.isSingleFile),
+                        testStarted: Boolean(progressMeta.testStarted),
+                        currentPartIndex: serverCurrentPartIndex,
+                        audioCurrentTime: progressMeta.audioCurrentTime,
+                      }
+                    )
+                  : {};
+                const serverAudioEndedByKey =
+                  progressMeta.audioEndedByKey &&
+                  typeof progressMeta.audioEndedByKey === "object" &&
+                  !Array.isArray(progressMeta.audioEndedByKey)
+                    ? progressMeta.audioEndedByKey
+                    : {};
+                if (isPrepareListeningTest) {
+                  setPrepareAudioPlayCountsByKey(serverAudioPlayCounts);
+                  setAudioEndedByKey(serverAudioEndedByKey);
+                }
                 if (progressMeta.testStarted) {
                   setTestStarted(true);
                 }
@@ -411,6 +483,8 @@ const ExamCoreListeningRuntimePage = ({
                           : 0,
                       activeQuestion: progressMeta.activeQuestion || null,
                       startedAudioByPart: progressMeta.startedAudioByPart || {},
+                      audioPlayCountsByKey: serverAudioPlayCounts,
+                      audioEndedByKey: serverAudioEndedByKey,
                       testStarted: Boolean(progressMeta.testStarted),
                       endTime: Number.isFinite(Number(endTime))
                         ? Number(endTime)
@@ -707,6 +781,8 @@ const ExamCoreListeningRuntimePage = ({
       currentPartIndex,
       activeQuestion,
       startedAudioByPart,
+      audioPlayCountsByKey: prepareAudioPlayCountsByKey,
+      audioEndedByKey,
       testStarted,
       endTime: endTimeRef.current,
       audioCurrentTime: lastAudioTimeRef.current,
@@ -718,7 +794,17 @@ const ExamCoreListeningRuntimePage = ({
     } catch {
       // ignore storage errors
     }
-  }, [answers, currentPartIndex, activeQuestion, startedAudioByPart, testStarted, storageKey, test]);
+  }, [
+    answers,
+    currentPartIndex,
+    activeQuestion,
+    startedAudioByPart,
+    prepareAudioPlayCountsByKey,
+    audioEndedByKey,
+    testStarted,
+    storageKey,
+    test,
+  ]);
 
   useEffect(() => {
     if (!test || submitted) return;
@@ -754,6 +840,8 @@ const ExamCoreListeningRuntimePage = ({
             currentPartIndex,
             activeQuestion,
             startedAudioByPart,
+            audioPlayCountsByKey: prepareAudioPlayCountsByKey,
+            audioEndedByKey,
             testStarted,
             endTime: endTimeRef.current,
             audioCurrentTime: lastAudioTimeRef.current,
@@ -846,6 +934,8 @@ const ExamCoreListeningRuntimePage = ({
     hasResumeAudio,
     id,
     startedAudioByPart,
+    prepareAudioPlayCountsByKey,
+    audioEndedByKey,
     storageKey,
     submitted,
     test,
@@ -956,6 +1046,7 @@ const ExamCoreListeningRuntimePage = ({
 
   const isSinglePanelPart = useMemo(() => {
     if (isGatewayListening) return true;
+    if (isPrepareListening && currentPartIndex === 1) return true;
 
     const isPetListening = String(test?.testType || routeTestType || '').toLowerCase().includes('pet');
     if (currentPartIndex === 0) return true;
@@ -983,7 +1074,7 @@ const ExamCoreListeningRuntimePage = ({
         '';
       return sectionType === 'cloze-test' || sectionType === 'notes-completion';
     });
-  }, [currentPartIndex, currentPart, isGatewayListening, routeTestType, test?.testType]);
+  }, [currentPartIndex, currentPart, isGatewayListening, isPrepareListening, routeTestType, test?.testType]);
 
   const currentAudioUrl = useMemo(() => {
     return getCurrentListeningAudioUrl(test, currentPart, globalAudioUrl, routeTestType);
@@ -1005,6 +1096,17 @@ const ExamCoreListeningRuntimePage = ({
   const usesSharedAudio = useMemo(() => {
     return Boolean(audioMeta.isSingleFile && resolvedAudioSrc);
   }, [audioMeta.isSingleFile, resolvedAudioSrc]);
+
+  const prepareAudioPlaybackKey = getPrepareListeningAudioPlaybackKey(
+    audioMeta.isSingleFile,
+    currentPartIndex
+  );
+  const prepareAudioPlaybackState = getPrepareListeningAudioPlaybackState({
+    playCount: prepareAudioPlayCountsByKey?.[prepareAudioPlaybackKey],
+    isPlaying: isAudioPlaying,
+    hasResumeAudio,
+    audioEnded: audioEndedByKey?.[prepareAudioPlaybackKey],
+  });
 
   useEffect(() => {
     setAudioError(null);
@@ -1034,6 +1136,10 @@ const ExamCoreListeningRuntimePage = ({
 
     // When switching parts/audio, reset playback bookkeeping without the pause-handler forcing replay.
     switchingAudioSrcRef.current = true;
+    if (isPrepareListening) {
+      setIsAudioPlaying(false);
+      setAudioEnded(false);
+    }
     try {
       audio.pause();
       audio.currentTime = 0;
@@ -1054,7 +1160,7 @@ const ExamCoreListeningRuntimePage = ({
     }, 0);
 
     return () => clearTimeout(t);
-  }, [resolvedAudioSrc, currentPartIndex, audioMeta.isSingleFile]);
+  }, [resolvedAudioSrc, currentPartIndex, audioMeta.isSingleFile, isPrepareListening]);
 
   useEffect(() => {
     if (!audioMeta.isSingleFile) return;
@@ -1128,6 +1234,9 @@ const ExamCoreListeningRuntimePage = ({
   const isStartGateVisible = useMemo(() => {
     if (submitted) return false;
     if (!resolvedAudioSrc) return false;
+    if (isPrepareListening) {
+      return prepareAudioPlaybackState.canStart || prepareAudioPlaybackState.canResume;
+    }
     const isStarted = audioMeta.isSingleFile
       ? testStarted
       : Boolean(startedAudioByPart?.[currentPartIndex]);
@@ -1135,7 +1244,20 @@ const ExamCoreListeningRuntimePage = ({
     if (audioEnded) return false;
     if (!isAudioPlaying && hasResumeAudio) return true;
     return false;
-  }, [submitted, resolvedAudioSrc, startedAudioByPart, currentPartIndex, audioMeta.isSingleFile, testStarted, isAudioPlaying, hasResumeAudio, audioEnded]);
+  }, [
+    submitted,
+    resolvedAudioSrc,
+    startedAudioByPart,
+    currentPartIndex,
+    audioMeta.isSingleFile,
+    testStarted,
+    isAudioPlaying,
+    hasResumeAudio,
+    audioEnded,
+    isPrepareListening,
+    prepareAudioPlaybackState.canStart,
+    prepareAudioPlaybackState.canResume,
+  ]);
 
   /* eslint-disable-next-line react-hooks/exhaustive-deps */
   const showGlobalAudioBar = useMemo(() => {
@@ -1170,35 +1292,150 @@ const ExamCoreListeningRuntimePage = ({
       setAudioError('Audio source is missing.');
       return;
     }
+    const playbackKey = getPrepareListeningAudioPlaybackKey(
+      audioMeta.isSingleFile,
+      currentPartIndex
+    );
+    const currentPlayCount = Number(prepareAudioPlayCountsByKey?.[playbackKey] || 0);
+    const currentAudioEnded = Boolean(audioEndedByKey?.[playbackKey]);
+    const playbackState = isPrepareListening
+      ? getPrepareListeningAudioPlaybackState({
+          playCount: currentPlayCount,
+          isPlaying: isAudioPlaying,
+          hasResumeAudio,
+          audioEnded: currentAudioEnded,
+        })
+      : null;
+
+    if (isPrepareListening && prepareAudioStartPendingRef.current) return;
+    if (
+      isPrepareListening &&
+      !playbackState.canStart &&
+      !playbackState.canResume &&
+      !playbackState.canReplay
+    ) {
+      setAudioError('This audio has already reached its two-play limit.');
+      return;
+    }
+    if (isPrepareListening) prepareAudioStartPendingRef.current = true;
+
     try {
-      const resumeAt = lastAudioTimeRef.current;
+      if (isPrepareListening) {
+        const isResume = playbackState.canResume;
+        const isReplay = playbackState.canReplay;
+        const resumeAt = isResume ? Number(lastAudioTimeRef.current || 0) : 0;
 
-      // Ensure the element picks up the current src before attempting to play.
-      audio.load?.();
-
-      const playAfterReady = async () => {
-        if (resumeAt > 0 && Number.isFinite(resumeAt)) {
-          try {
-            audio.currentTime = resumeAt;
-          } catch {
-            // ignore
+        if (isReplay) {
+          lastAudioTimeRef.current = 0;
+          if (audioMeta.isSingleFile) {
+            sharedAudioMaxPlayedTimeRef.current = 0;
+            maxPlayedTimeByPartRef.current = {};
+          } else {
+            maxPlayedTimeByPartRef.current = {
+              ...(maxPlayedTimeByPartRef.current || {}),
+              [currentPartIndex]: 0,
+            };
+          }
+          setAudioEndedByKey((previous) => ({
+            ...previous,
+            [playbackKey]: false,
+          }));
+          setAudioEnded(false);
+        } else if (isResume && resumeAt > 0) {
+          maxPlayedTimeByPartRef.current = {
+            ...(maxPlayedTimeByPartRef.current || {}),
+            [currentPartIndex]: Math.max(
+              Number(maxPlayedTimeByPartRef.current?.[currentPartIndex] || 0),
+              resumeAt
+            ),
+          };
+          if (audioMeta.isSingleFile) {
+            sharedAudioMaxPlayedTimeRef.current = Math.max(
+              Number(sharedAudioMaxPlayedTimeRef.current || 0),
+              resumeAt
+            );
           }
         }
-        await audio.play();
-      };
 
-      if (audio.readyState < 1) {
-        const onMeta = () => {
-          audio.removeEventListener('loadedmetadata', onMeta);
-          playAfterReady().catch((e) => {
-            throw e;
-          });
+        const waitForMetadata = async () => {
+          if (audio.readyState >= 1) return;
+          const wasSwitchingAudio = switchingAudioSrcRef.current;
+          switchingAudioSrcRef.current = true;
+          try {
+            await new Promise((resolve, reject) => {
+              const cleanup = () => {
+                audio.removeEventListener('loadedmetadata', onMetadata);
+                audio.removeEventListener('error', onError);
+              };
+              const onMetadata = () => {
+                cleanup();
+                resolve();
+              };
+              const onError = () => {
+                cleanup();
+                reject(new Error('Audio metadata could not be loaded.'));
+              };
+              audio.addEventListener('loadedmetadata', onMetadata);
+              audio.addEventListener('error', onError);
+              audio.load?.();
+            });
+          } finally {
+            switchingAudioSrcRef.current = wasSwitchingAudio;
+          }
         };
-        audio.addEventListener('loadedmetadata', onMeta);
+
+        await waitForMetadata();
+        if (isReplay) {
+          audio.currentTime = 0;
+        } else if (resumeAt > 0 && Number.isFinite(resumeAt)) {
+          audio.currentTime = resumeAt;
+        }
+        await audio.play();
+
+        if (!isResume) {
+          setPrepareAudioPlayCountsByKey((previous) => ({
+            ...previous,
+            [playbackKey]: Math.min(
+              PREPARE_LISTENING_AUDIO_PLAYS_PER_PART,
+              Math.max(0, Number(previous?.[playbackKey] || 0)) + 1
+            ),
+          }));
+          setAudioEndedByKey((previous) => ({
+            ...previous,
+            [playbackKey]: false,
+          }));
+        }
       } else {
-        await playAfterReady();
+        const resumeAt = lastAudioTimeRef.current;
+
+        // Ensure the element picks up the current src before attempting to play.
+        audio.load?.();
+
+        const playAfterReady = async () => {
+          if (resumeAt > 0 && Number.isFinite(resumeAt)) {
+            try {
+              audio.currentTime = resumeAt;
+            } catch {
+              // ignore
+            }
+          }
+          await audio.play();
+        };
+
+        if (audio.readyState < 1) {
+          const onMeta = () => {
+            audio.removeEventListener('loadedmetadata', onMeta);
+            playAfterReady().catch((e) => {
+              throw e;
+            });
+          };
+          audio.addEventListener('loadedmetadata', onMeta);
+        } else {
+          await playAfterReady();
+        }
       }
       markPartAudioStarted(currentPartIndex);
+      if (isPrepareListening) setIsAudioPlaying(true);
       setTimeout(() => {
         if (audio.paused) {
           setAudioError('Audio did not start. Please check the audio file or try another browser.');
@@ -1211,19 +1448,51 @@ const ExamCoreListeningRuntimePage = ({
           ? 'Audio file is not supported or the source URL is invalid.'
           : 'Unable to play audio. Please check your connection or try another browser.'
       );
+    } finally {
+      if (isPrepareListening) prepareAudioStartPendingRef.current = false;
     }
-  }, [currentPartIndex, markPartAudioStarted, resolvedAudioSrc]);
+  }, [
+    audioEndedByKey,
+    audioMeta.isSingleFile,
+    currentPartIndex,
+    hasResumeAudio,
+    isAudioPlaying,
+    isPrepareListening,
+    markPartAudioStarted,
+    prepareAudioPlayCountsByKey,
+    resolvedAudioSrc,
+  ]);
 
   const handleAudioPlay = useCallback(() => {
     markPartAudioStarted(currentPartIndex);
     setIsAudioPlaying(true);
     setAudioEnded(false);
-  }, [currentPartIndex, markPartAudioStarted]);
+    if (isPrepareListening) {
+      const playbackKey = getPrepareListeningAudioPlaybackKey(
+        audioMeta.isSingleFile,
+        currentPartIndex
+      );
+      setAudioEndedByKey((previous) => ({
+        ...previous,
+        [playbackKey]: false,
+      }));
+    }
+  }, [audioMeta.isSingleFile, currentPartIndex, isPrepareListening, markPartAudioStarted]);
 
   const handleAudioEnded = useCallback(() => {
     setIsAudioPlaying(false);
     setAudioEnded(true);
-  }, []);
+    if (isPrepareListening) {
+      const playbackKey = getPrepareListeningAudioPlaybackKey(
+        audioMeta.isSingleFile,
+        currentPartIndex
+      );
+      setAudioEndedByKey((previous) => ({
+        ...previous,
+        [playbackKey]: true,
+      }));
+    }
+  }, [audioMeta.isSingleFile, currentPartIndex, isPrepareListening]);
 
   const handleAudioPause = useCallback(() => {
     if (switchingAudioSrcRef.current) return;
@@ -1305,6 +1574,57 @@ const ExamCoreListeningRuntimePage = ({
       }, 0);
     }
   }, [currentPartIndex, startedAudioByPart, audioMeta.isSingleFile, testStarted]);
+
+  const prepareListeningPlaybackControl =
+    isPrepareListening && resolvedAudioSrc ? (
+      <div
+        role="status"
+        aria-live="polite"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 10,
+          margin: '8px 0 12px',
+          padding: '9px 12px',
+          border: `1px solid ${isDarkMode ? '#9a3412' : '#fed7aa'}`,
+          borderRadius: 10,
+          background: isDarkMode ? 'rgba(124, 45, 18, 0.22)' : '#fff7ed',
+          color: isDarkMode ? '#fdba74' : '#9a3412',
+          fontSize: 13,
+        }}
+      >
+        <span>
+          {audioMeta.isSingleFile ? 'Whole-test audio' : `Part ${currentPartIndex + 1} audio`}
+          {' · '}
+          {prepareAudioPlaybackState.playCount}/{PREPARE_LISTENING_AUDIO_PLAYS_PER_PART} listens used
+        </span>
+        {prepareAudioPlaybackState.canReplay && !submitted ? (
+          <button
+            type="button"
+            onClick={handlePlayGate}
+            style={{
+              border: '1px solid #ea580c',
+              borderRadius: 999,
+              padding: '7px 12px',
+              background: '#f97316',
+              color: '#fff',
+              cursor: 'pointer',
+              fontSize: 12,
+              fontWeight: 700,
+            }}
+          >
+            Listen again (final replay)
+          </button>
+        ) : null}
+        {prepareAudioPlaybackState.hasUsedAllPlays &&
+        !prepareAudioPlaybackState.canResume &&
+        !isAudioPlaying ? (
+          <span>Replay limit reached for this audio.</span>
+        ) : null}
+      </div>
+    ) : null;
 
   // Format time display
   const formatTime = (seconds) => {
@@ -1425,6 +1745,15 @@ const ExamCoreListeningRuntimePage = ({
     };
 
     return renderOpenClozeSection(clozeSection, secIdx, sectionStartNum);
+  };
+  const renderPrepareListeningSectionScoreNote = (section, sectionType) => {
+    if (!isPrepareListening || sectionType === "notes-completion") return null;
+    return (
+      <PrepareListeningSectionScoreNoteFooter
+        scoreNote={section?.scoreNote}
+        isDarkMode={isDarkMode}
+      />
+    );
   };
   const renderGapMatchSection = (section, secIdx, sectionStartNum) => (
     <GapMatchSectionDisplay
@@ -2139,7 +2468,7 @@ const ExamCoreListeningRuntimePage = ({
   return (
     <div
       ref={annotationContentRef}
-      className={`cambridge-test-container${isGatewayListening ? ' cambridge-test-container--gateway-listening' : ''}`}
+      className={`cambridge-test-container${isGatewayListening ? ' cambridge-test-container--gateway-listening' : ''}${isPrepareListening ? ' cambridge-test-container--prepare-listening' : ''}${isPrepareListening && currentPartIndex === 1 ? ' cambridge-test-container--prepare-listening-part-2' : ''}`}
       data-student-annotation-layout="true"
     >
       <ExtensionToast message={extensionToast} />
@@ -2234,7 +2563,9 @@ const ExamCoreListeningRuntimePage = ({
           <div style={{ ...styles.audioContainer, padding: '8px 10px', marginBottom: 0, borderRadius: '10px' }}>
             <InlineIcon name="listening" size={14} style={{ marginRight: '8px', color: isDarkMode ? '#e2e8f0' : '#0f172a' }} />
             <div style={{ flex: 1, fontSize: 12.5, color: isDarkMode ? '#e5e7eb' : '#0f172a', lineHeight: 1.3 }}>
-              Global audio is ready for this test.
+              {isPrepareListening
+                ? 'Global audio is shared across all parts.'
+                : 'Global audio is ready for this test.'}
             </div>
             <div
               style={styles.audioTipWrap}
@@ -2251,6 +2582,8 @@ const ExamCoreListeningRuntimePage = ({
               )}
             </div>
           </div>
+
+          {prepareListeningPlaybackControl}
 
           {audioError && (
             <div style={styles.audioErrorBox} role="alert">
@@ -2277,9 +2610,22 @@ const ExamCoreListeningRuntimePage = ({
           ]}
           noticeTitle="Important note"
           noticeContent={
-            <>
-              Audio starts as soon as you press Play. You <b>cannot pause or rewind</b> during the test.
-            </>
+            isPrepareListening ? (
+              audioMeta.isSingleFile ? (
+                <>
+                  This shared audio has one initial listen and one optional replay. You <b>cannot pause or rewind</b>.
+                </>
+              ) : (
+                <>
+                  Each Part has one initial listen and one optional replay. Audio starts when you press Play;
+                  you <b>cannot pause or rewind</b>.
+                </>
+              )
+            ) : (
+              <>
+                Audio starts as soon as you press Play. You <b>cannot pause or rewind</b> during the test.
+              </>
+            )
           }
           extraContent={audioError ? (
             <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10, padding: '10px 14px', marginBottom: 14, fontSize: 13, color: '#991b1b' }}>
@@ -2292,12 +2638,24 @@ const ExamCoreListeningRuntimePage = ({
           ) : null}
           secondaryLabel="Exit"
           onSecondary={() => navigate(-1)}
-          primaryLabel={hasResumeAudio ? 'Resume' : 'Play & Start'}
+          primaryLabel={
+            isPrepareListening
+              ? prepareAudioPlaybackState.canResume
+                ? 'Resume'
+                : testStarted
+                  ? 'Play audio'
+                  : 'Play & Start'
+              : hasResumeAudio
+                ? 'Resume'
+                : 'Play & Start'
+          }
           onPrimary={handlePlayGate}
           darkContent={isDarkMode}
           maxWidth={480}
         />
       )}
+
+      {!usesSharedAudio && prepareListeningPlaybackControl}
 
       <div ref={annotationLayoutRef} className="cambridge-student-content-shell">
       {/* Letter-matching instruction – sits above both panels */}
@@ -2322,7 +2680,7 @@ const ExamCoreListeningRuntimePage = ({
       {/* Main Content */}
       <div className="cambridge-main-content" ref={containerRef} style={{ position: 'relative' }}>
         {isSinglePanelPart ? (
-          // Part 1: single panel (teacher request)
+          // Keep single-panel instructions and audio above the questions.
           <div className="cambridge-questions-column" style={{ width: '100%' }}>
             <div
               className="cambridge-content-wrapper"
@@ -2607,6 +2965,7 @@ const ExamCoreListeningRuntimePage = ({
                           );
                         })
                       )}
+                      {renderPrepareListeningSectionScoreNote(section, sectionType)}
                     </div>
                   );
                 })}
@@ -3462,6 +3821,7 @@ const ExamCoreListeningRuntimePage = ({
                         );
                       })
                     )}
+                    {renderPrepareListeningSectionScoreNote(section, sectionType)}
                   </div>
                 );
               })}
@@ -3473,7 +3833,7 @@ const ExamCoreListeningRuntimePage = ({
       </div>
 
       {/* Footer Navigation (match Cambridge Reading) */}
-      <footer className={`cambridge-footer cambridge-footer--centered-nav${isGatewayListening ? ' cambridge-footer--gateway-listening' : ''}`}>
+      <footer className={`cambridge-footer cambridge-footer--centered-nav${isGatewayListening ? ' cambridge-footer--gateway-listening' : ''}${isPrepareListening ? ' cambridge-footer--prepare-listening' : ''}`}>
         {/* Navigation Arrows - Top Right */}
         <div className="cambridge-footer-arrows">
           <button

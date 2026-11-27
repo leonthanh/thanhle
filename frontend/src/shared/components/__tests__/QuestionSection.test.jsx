@@ -122,3 +122,77 @@ test('QuestionSection uses a single-answer editor for multiple-choice questions'
   expect(screen.getByText('Dạng này chỉ hỗ trợ 1 đáp án đúng')).toBeInTheDocument();
   expect(screen.getByText('Nếu cần nhiều đáp án, hãy chọn loại câu hỏi "Trắc nghiệm nhiều đáp án"')).toBeInTheDocument();
 });
+
+test('QuestionSection previews question formats without changing the question until applied', () => {
+  const onQuestionChange = jest.fn();
+  const multipleChoiceSection = {
+    ...sampleSection,
+    questions: [
+      {
+        questionNumber: '1',
+        questionType: 'multiple-choice',
+      },
+    ],
+  };
+
+  render(
+    <QuestionSection
+      {...defaultProps}
+      section={multipleChoiceSection}
+      onQuestionChange={onQuestionChange}
+    />
+  );
+
+  fireEvent.click(screen.getByRole('button', { name: 'Xem mẫu các dạng câu hỏi' }));
+  expect(screen.getByText('Which statement is correct?')).toBeInTheDocument();
+  expect(onQuestionChange).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByRole('button', { name: 'IX Matching Headings' }));
+  expect(screen.getByRole('heading', { name: 'IX Matching Headings' })).toBeInTheDocument();
+  expect(screen.getByText(/Paragraph A/)).toBeInTheDocument();
+  expect(onQuestionChange).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByRole('button', { name: 'Dùng loại này' }));
+  expect(onQuestionChange).toHaveBeenCalledWith(
+    0,
+    0,
+    0,
+    'full',
+    expect.objectContaining({
+      questionNumber: '1',
+      questionType: 'ielts-matching-headings',
+    })
+  );
+});
+
+test.each([
+  [
+    'true-false-not-given',
+    'Do the following statements agree with the information given in Reading Passage 1? Write TRUE, FALSE or NOT GIVEN.',
+  ],
+  [
+    'cloze-test',
+    'Complete the notes below. Choose NO MORE THAN TWO WORDS for each answer.',
+  ],
+  [
+    'matching',
+    'Match each description with the correct place, A-E.',
+  ],
+  [
+    'paragraph-matching',
+    'Which paragraph contains the following information?',
+  ],
+  [
+    'summary-completion',
+    'Complete the summary using the list of words A-I below.',
+  ],
+])('QuestionSection shows an English IELTS prompt for %s', (questionType, prompt) => {
+  const section = {
+    ...sampleSection,
+    questions: [{ questionNumber: '1', questionType }],
+  };
+
+  render(<QuestionSection {...defaultProps} section={section} />);
+
+  expect(screen.getByText(prompt)).toBeInTheDocument();
+});

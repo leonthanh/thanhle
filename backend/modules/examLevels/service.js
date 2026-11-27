@@ -1,6 +1,7 @@
 const { Op } = require("sequelize");
 const { ExamLevel, ExamLevelSubmission, ExamLevelTest } = require("../../models");
 const { processTestParts } = require("../../utils/clozParser");
+const { AppError } = require("../../utils/AppError");
 const { normalizeStudentResultVisibility } = require("../../utils/studentResultVisibility");
 const {
   DEFAULT_EXTENSION_MINUTES,
@@ -20,15 +21,30 @@ const ALLOWED_SKILLS = new Set([
   "writing",
   "reading-writing",
 ]);
+const PREPARE_LISTENING_DURATION_MINUTES = 15;
 
-const createServiceError = (statusCode, message) => {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  return error;
-};
+const createServiceError = (statusCode, message) => new AppError({
+  code: ({
+    400: "BAD_REQUEST",
+    401: "UNAUTHORIZED",
+    403: "FORBIDDEN",
+    404: "NOT_FOUND",
+    409: "CONFLICT",
+  })[statusCode] || "EXAM_LEVEL_ERROR",
+  message,
+  statusCode,
+});
 
 const normalizeCode = (value) => String(value || "").trim().toLowerCase();
 const normalizeSkill = (value) => String(value || "").trim().toLowerCase();
+const isPrepareListeningSkill = (code, skill, config) =>
+  normalizeCode(code) === "prepare" &&
+  normalizeSkill(skill) === "listening" &&
+  config?.templateId === "exam-listening-v1";
+const getConfiguredDuration = (code, skill, config) =>
+  isPrepareListeningSkill(code, skill, config)
+    ? PREPARE_LISTENING_DURATION_MINUTES
+    : Number(config.durationMinutes);
 const isTeacher = (user) => ["teacher", "admin"].includes(String(user?.role || "").toLowerCase());
 const resolveSkillForTemplate = (level, templateId) =>
   (level.skills || []).find(
@@ -75,7 +91,21 @@ const toPublicTest = (test) => {
 
 const getLevelByCode = async (code) => {
   const level = await getLevel(code);
-  return level.toJSON();
+  const value = level.toJSON();
+  const listeningConfig = value.skillConfig?.listening;
+  if (isPrepareListeningSkill(value.code, "listening", listeningConfig)) {
+    return {
+      ...value,
+      skillConfig: {
+        ...value.skillConfig,
+        listening: {
+          ...listeningConfig,
+          durationMinutes: PREPARE_LISTENING_DURATION_MINUTES,
+        },
+      },
+    };
+  }
+  return value;
 };
 
 const listTests = async ({ code, skill, user }) => {
@@ -87,7 +117,13 @@ const listTests = async ({ code, skill, user }) => {
     where,
     order: [["createdAt", "DESC"]],
   });
-  return tests.map(toPublicTest);
+  return tests.map((test) => {
+    const value = toPublicTest(test);
+    if (isPrepareListeningSkill(code, normalizedSkill, level.skillConfig?.[normalizedSkill])) {
+      value.duration = PREPARE_LISTENING_DURATION_MINUTES;
+    }
+    return value;
+  });
 };
 
 const getTestById = async ({ code, skill, id, user }) => {
@@ -99,8 +135,12 @@ const getTestById = async ({ code, skill, id, user }) => {
     id,
     includeUnpublished: isTeacher(user),
   });
+  const value = test.toJSON();
+  if (isPrepareListeningSkill(code, normalizedSkill, level.skillConfig?.[normalizedSkill])) {
+    value.duration = PREPARE_LISTENING_DURATION_MINUTES;
+  }
   return {
-    ...test.toJSON(),
+    ...value,
     level: {
       code: level.code,
       name: level.name,
@@ -150,7 +190,7 @@ const createTest = async ({ code, skill, body = {}, user }) => {
     mainAudioUrl: String(body.mainAudioUrl || "").trim() || null,
     parts: processedParts,
     totalQuestions: countTotalQuestionsFromParts(processedParts),
-    duration: Number(config.durationMinutes),
+    duration: getConfiguredDuration(code, normalizedSkill, config),
     status: body.status === "draft" ? "draft" : "published",
     showResultModal: studentResultVisibility !== "confirmation",
     studentResultVisibility,
@@ -168,6 +208,9 @@ const updateTest = async ({ code, skill, id, body = {} }) => {
     includeUnpublished: true,
   });
   const updates = {};
+  if (isPrepareListeningSkill(code, normalizedSkill, config)) {
+    updates.duration = PREPARE_LISTENING_DURATION_MINUTES;
+  }
   if (body.title !== undefined) {
     const title = String(body.title || "").trim();
     if (!title) throw createServiceError(400, "Title is required.");
@@ -433,26 +476,28 @@ const submitTest = async ({ code, skill, id, body = {}, user }) => {
     if (submissionId && Number(submission?.id) !== submissionId) {
       throw createServiceError(404, "Active placement draft not found.");
     }
-  } else if (submissionId) {
-    submission = await ExamLevelSubmission.findOne({
-      where: {
-        id: submissionId,
-        levelId: level.id,
-        testId: test.id,
-        userId,
-        finished: false,
-      },
-    });
-    if (!submission) throw createServiceError(404, "Active exam draft not found.");
   } else {
-    submission = await ExamLevelSubmission.findOne({
-      where: {
-        levelId: level.id,
-        testId: test.id,
-        userId,
-        finished: false,
-      },
-    });
+    if (submissionId) {
+      submission = await ExamLevelSubmission.findOne({
+        where: {
+          id: submissionId,
+          levelId: level.id,
+          testId: test.id,
+          userId,
+          finished: false,
+        },
+      });
+    }
+    if (!submission) {
+      submission = await ExamLevelSubmission.findOne({
+        where: {
+          levelId: level.id,
+          testId: test.id,
+          userId,
+          finished: false,
+        },
+      });
+    }
   }
   const submittedAt = new Date();
   const values = {

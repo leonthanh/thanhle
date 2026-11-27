@@ -1,0 +1,90 @@
+.starEduReport .pr-assessment__setup {
+  align-items: center;
+}
+
+.starEduReport .pr-assessment__setup .score input {
+  width: 110px;
+}
+
+.starEduReport .pr-assessment__score-hint {
+  flex: 1 1 280px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.starEduReport .pr-assessment__hint {
+  margin: -4px 0 16px;
+}
+
+.starEduReport .pr-assessment input,
+.starEduReport .pr-assessment textarea {
+  color: var(--ink);
+  caret-color: var(--ink);
+}
+
+.starEduReport .pr-assessment input::placeholder,
+.starEduReport .pr-assessment textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+.starEduReport .pr-assessment__step .step-h {
+  align-items: flex-start;
+}
+
+.starEduReport .pr-assessment__count {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  min-height: 22px;
+  padding: 2px 8px;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.starEduReport .pr-assessment__sheet textarea {
+  min-height: 230px;
+}
+
+.starEduReport .summary .assessment-comment {
+  white-space: pre-line;
+}
+
+.starEduReport .pr-assessment__sheet .sheet-f__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.starEduReport .pr-assessment__sheet button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 560px) {
+  .starEduReport .pr-assessment__setup {
+    align-items: stretch;
+  }
+
+  .starEduReport .pr-assessment__count {
+    font-size: 0.68rem;
+  }
+
+  .starEduReport .pr-assessment__sheet .sheet-f {
+    align-items: stretch;
+  }
+
+  .starEduReport .pr-assessment__sheet .sheet-f__actions {
+    width: 100%;
+  }
+
+  .starEduReport .pr-assessment__sheet .sheet-f__actions button {
+    flex: 1;
+  }
+}

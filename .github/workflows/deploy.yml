@@ -168,7 +168,7 @@ jobs:
       - name: Deploy Frontend
         if: needs.prepare.outputs.frontend-changed == 'true'
         env:
-          FTP_HOST: ghf55-22111.azdigihost.com
+          FTP_HOST: pbv45-24815.azdigihost.com
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |
@@ -291,7 +291,7 @@ jobs:
       - name: Deploy Backend
         if: needs.prepare.outputs.backend-changed == 'true'
         env:
-          FTP_HOST: ghf55-22111.azdigihost.com
+          FTP_HOST: pbv45-24815.azdigihost.com
           FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
           FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
         run: |

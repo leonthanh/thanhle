@@ -1150,7 +1150,7 @@ export const TEST_CONFIGS = {
     nameVi: 'Listening',
     totalQuestions: 0,
     parts: 0,
-    duration: 30,
+    duration: 15,
     questionTypes: GATEWAY_LISTENING_QUESTION_TYPES,
     partStructure: [],
   },
