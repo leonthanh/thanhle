@@ -403,16 +403,16 @@ const ListeningTestEditor = ({
 
   // Question types for Listening
   const questionTypes = [
-    { value: 'fill', label: 'Fill in the Blank', icon: 'fill', desc: 'Điền từ vào chỗ trống theo từng câu.' },
-    { value: 'form-completion', label: 'Form Completion', icon: 'form', desc: 'Form có nhiều blank được đánh số tự động.' },
-    { value: LISTENING_CLOZE_TYPE, label: 'Cloze Test (Table)', icon: 'table', desc: 'Schema dùng chung với IX Reading cloze table.' },
-    { value: 'notes-completion', label: 'Notes Completion', icon: 'questions', desc: 'Dán notes có blank để tách câu hỏi.' },
-    { value: 'abc', label: 'Multiple Choice (A/B/C)', icon: 'choice', desc: '3 lựa chọn.' },
-    { value: 'abcd', label: 'Multiple Choice (A/B/C/D)', icon: 'choice', desc: '4 lựa chọn.' },
-    { value: 'matching', label: 'Matching', icon: 'matching', desc: 'Nối mục bên trái với đáp án chữ cái.' },
-    { value: 'multi-select', label: 'Multi Select', icon: 'multi-select', desc: 'Một câu chiếm nhiều slot theo số đáp án cần chọn.' },
-    { value: 'map-labeling', label: 'Map / Plan Labeling', icon: 'map', desc: 'Gắn nhãn vào sơ đồ hoặc bản đồ.' },
-    { value: 'flowchart', label: 'Flowchart Completion', icon: 'flowchart', desc: 'Flowchart có blank chọn đáp án A-G.' },
+    { value: 'fill', label: 'Fill in the Blank', icon: 'fill', desc: 'Điền từ vào chỗ trống theo từng câu.', englishPrompt: 'Complete the sentences below. Write ONE WORD ONLY for each answer.' },
+    { value: 'form-completion', label: 'Form Completion', icon: 'form', desc: 'Form có nhiều blank được đánh số tự động.', englishPrompt: 'Complete the form below. Write ONE WORD AND/OR A NUMBER for each answer.' },
+    { value: LISTENING_CLOZE_TYPE, label: 'Cloze Test (Table)', icon: 'table', desc: 'Schema dùng chung với IX Reading cloze table.', englishPrompt: 'Complete the table below. Write ONE WORD ONLY for each answer.' },
+    { value: 'notes-completion', label: 'Notes Completion', icon: 'questions', desc: 'Dán notes có blank để tách câu hỏi.', englishPrompt: 'Complete the notes below. Write ONE WORD AND/OR A NUMBER for each answer.' },
+    { value: 'abc', label: 'Multiple Choice (A/B/C)', icon: 'choice', desc: '3 lựa chọn.', englishPrompt: 'Choose the correct letter, A, B or C.' },
+    { value: 'abcd', label: 'Multiple Choice (A/B/C/D)', icon: 'choice', desc: '4 lựa chọn.', englishPrompt: 'Choose the correct letter, A, B, C or D.' },
+    { value: 'matching', label: 'Matching', icon: 'matching', desc: 'Nối mục bên trái với đáp án chữ cái.', englishPrompt: 'Which attitude is associated with the following people during the conversation? Choose SIX answers from the box and write the correct letter, A-H, next to Questions 21-26.' },
+    { value: 'multi-select', label: 'Multi Select', icon: 'multi-select', desc: 'Một câu chiếm nhiều slot theo số đáp án cần chọn.', englishPrompt: 'Choose TWO letters, A-E.' },
+    { value: 'map-labeling', label: 'Map / Plan Labeling', icon: 'map', desc: 'Gắn nhãn vào sơ đồ hoặc bản đồ.', englishPrompt: 'Label the map below. Write the correct letter, A-I, next to Questions 15-20.' },
+    { value: 'flowchart', label: 'Flowchart Completion', icon: 'flowchart', desc: 'Flowchart có blank chọn đáp án A-G.', englishPrompt: 'Complete the flow-chart below. Write ONE WORD ONLY for each answer.' },
   ];
 
   // Small helper component used in the review modal to render map image with pixel-accurate markers
@@ -1094,6 +1094,34 @@ const ListeningTestEditor = ({
                             style={{ minWidth: "260px" }}
                           />
                         </div>
+                        {(() => {
+                          const selectedQuestionType = questionTypes.find(
+                            (type) => type.value === (currentSection.questionType || "fill")
+                          );
+                          if (!selectedQuestionType) return null;
+
+                          return (
+                            <div
+                              role="note"
+                              aria-label="Gợi ý loại câu hỏi"
+                              style={{
+                                margin: "-4px 0 16px",
+                                padding: "10px 12px",
+                                borderRadius: "8px",
+                                border: "1px solid #e2e8f0",
+                                backgroundColor: "#f8fafc",
+                                color: "#475569",
+                                fontSize: "13px",
+                                lineHeight: 1.5,
+                              }}
+                            >
+                              <div>{selectedQuestionType.desc}</div>
+                              <div style={{ marginTop: "6px", color: "#334155" }}>
+                                <strong>Mẫu câu lệnh tiếng Anh:</strong> {selectedQuestionType.englishPrompt}
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </>
                     );
                   })()}

@@ -15,6 +15,266 @@ import IELTSMatchingHeadingsQuestion from './IELTSMatchingHeadingsQuestion';
 import DiagramLabelingQuestion from './DiagramLabelingQuestion.jsx';
 import { getDefaultQuestionData } from '../config/questionTypes';
 import InlineIcon from './InlineIcon.jsx';
+import './QuestionTypeGuide.css';
+
+const READING_QUESTION_TYPES = [
+  {
+    id: 'multiple-choice',
+    label: 'Trắc nghiệm 1 đáp án',
+    description: 'Học sinh chọn 1 đáp án đúng từ 4-5 lựa chọn.',
+    response: 'Chọn một đáp án.',
+    englishPrompt: 'Choose the correct letter, A, B, C or D.',
+    sample: [
+      { kind: 'instruction', text: 'Choose the correct letter, A, B, C or D.' },
+      { kind: 'prompt', text: 'Which statement is correct?' },
+      { kind: 'option', text: 'A. The library opened in 1980.' },
+      { kind: 'option', text: 'B. The library opened in 1990.' },
+      { kind: 'option', text: 'C. The library opened in 2000.' },
+      { kind: 'answer', text: 'Đáp án mẫu: B' },
+    ],
+  },
+  {
+    id: 'multi-select',
+    label: 'Trắc nghiệm nhiều đáp án',
+    description: 'Học sinh chọn nhiều đáp án đúng (tối thiểu 2 đáp án).',
+    response: 'Chọn đúng hai đáp án trong danh sách.',
+    englishPrompt: 'Choose TWO letters, A-E.',
+    sample: [
+      { kind: 'instruction', text: 'Choose TWO letters, A-E.' },
+      { kind: 'option', text: '[ ] A. The park is open every day.' },
+      { kind: 'option', text: '[ ] B. The park has a small lake.' },
+      { kind: 'option', text: '[ ] C. The park opened last year.' },
+      { kind: 'answer', text: 'Đáp án mẫu: B và C' },
+    ],
+  },
+  {
+    id: 'fill-in-the-blanks',
+    label: 'Điền vào chỗ trống',
+    description: 'Học sinh điền từ hoặc cụm từ để hoàn thành câu (tối đa 3 từ).',
+    response: 'Tự nhập từ hoặc cụm từ ngắn.',
+    englishPrompt: 'Complete the sentences below. Choose NO MORE THAN TWO WORDS for each answer.',
+    sample: [
+      { kind: 'instruction', text: 'Complete the sentences below. Choose NO MORE THAN TWO WORDS for each answer.' },
+      { kind: 'prompt', text: 'The museum opened in ______.' },
+      { kind: 'answer', text: 'Đáp án mẫu: 1890' },
+    ],
+  },
+  {
+    id: 'matching',
+    label: 'Ghép cặp / Combobox',
+    description: 'Học sinh ghép các mục từ cột trái với cột phải.',
+    response: 'Ghép từng mục với một lựa chọn.',
+    englishPrompt: 'Match each description with the correct place, A-E.',
+    sample: [
+      { kind: 'instruction', text: 'Match each description with the correct place, A-E.' },
+      { kind: 'prompt', text: '1. A place with a large collection of books.  ->  [A, B, C, D, or E]' },
+      { kind: 'prompt', text: '2. A place where visitors can see historical objects.  ->  [A, B, C, D, or E]' },
+      { kind: 'option', text: 'A. The library' },
+      { kind: 'option', text: 'B. The history museum' },
+      { kind: 'option', text: 'C. The garden' },
+    ],
+  },
+  {
+    id: 'true-false-not-given',
+    label: 'True/False/Not Given',
+    description: 'Học sinh chọn True, False hoặc Not Given.',
+    response: 'Đánh giá thông tin đúng, sai hoặc không được đề cập.',
+    englishPrompt: 'Do the following statements agree with the information given in Reading Passage 1? Write TRUE, FALSE or NOT GIVEN.',
+    sample: [
+      { kind: 'instruction', text: 'Do the following statements agree with the information given in Reading Passage 1?' },
+      { kind: 'prompt', text: 'Statement: The library opened in 1890.' },
+      { kind: 'option', text: 'Write TRUE, FALSE or NOT GIVEN.' },
+    ],
+  },
+  {
+    id: 'yes-no-not-given',
+    label: 'Yes/No/Not Given',
+    description: 'Học sinh chọn Yes, No hoặc Not Given.',
+    response: 'Xác định quan điểm của tác giả: đồng ý, không đồng ý hoặc không đề cập.',
+    englishPrompt: 'Do the following statements agree with the writer\'s views? Write YES, NO or NOT GIVEN.',
+    sample: [
+      { kind: 'instruction', text: 'Do the following statements agree with the writer\'s views?' },
+      { kind: 'prompt', text: "Writer's view: The library should open longer." },
+      { kind: 'option', text: 'Write YES, NO or NOT GIVEN.' },
+    ],
+  },
+  {
+    id: 'cloze-test',
+    label: 'Cloze / Notes Completion - Điền chỗ trống trong đoạn/ghi chú',
+    description: 'Học sinh điền từ vào các chỗ trống [BLANK] trong đoạn văn, ghi chú hoặc bảng.',
+    response: 'Điền từ trực tiếp vào các chỗ trống trong đoạn văn.',
+    englishPrompt: 'Complete the notes below. Choose NO MORE THAN TWO WORDS for each answer.',
+    sample: [
+      { kind: 'instruction', text: 'Complete the notes below. Choose NO MORE THAN TWO WORDS for each answer.' },
+      { kind: 'prompt', text: 'Market research: interviews and observations of customers at [1] ______.' },
+      { kind: 'prompt', text: 'Marketing aim: give the product a supportive [2] ______.' },
+      { kind: 'answer', text: 'Example answers: 1. home   2. image' },
+    ],
+  },
+  {
+    id: 'summary-completion',
+    label: 'Summary Completion - Complete the summary (word list)',
+    description: 'Hoàn thành đoạn tóm tắt bằng cách chọn từ trong danh sách và gán đáp án cho từng [BLANK].',
+    response: 'Chọn chữ cái từ danh sách từ cho sẵn để điền vào đoạn tóm tắt.',
+    englishPrompt: 'Complete the summary using the list of words A-I below.',
+    sample: [
+      { kind: 'instruction', text: 'Complete the summary using the list of words A-I below.' },
+      { kind: 'option', text: 'A. library   B. station   C. market   ...   I. school' },
+      { kind: 'prompt', text: 'The first public building was the [1] ______.' },
+      { kind: 'answer', text: 'Đáp án mẫu: 1. A' },
+    ],
+  },
+  {
+    id: 'paragraph-matching',
+    label: 'Matching Information - Tìm thông tin ở đoạn nào (A-G)',
+    description: 'Học sinh tìm thông tin ở đoạn A-G để trả lời câu hỏi.',
+    response: 'Chọn đoạn văn A-G có chứa thông tin cần tìm.',
+    englishPrompt: 'Which paragraph contains the following information?',
+    sample: [
+      { kind: 'instruction', text: 'Which paragraph contains the following information?' },
+      { kind: 'prompt', text: 'A reference to the rate at which forest habitats are being reduced.' },
+      { kind: 'option', text: 'A     B     C     D     E     F     G     H' },
+    ],
+  },
+  {
+    id: 'ielts-matching-headings',
+    label: 'IX Matching Headings',
+    description: 'Ghép mỗi đoạn văn (A-G) với 1 heading phù hợp; có thể có headings dư.',
+    response: 'Ghép mỗi đoạn văn với một heading (i-x).',
+    englishPrompt: 'Choose the correct heading for each paragraph from the list below.',
+    sample: [
+      { kind: 'instruction', text: 'Choose the correct heading for each paragraph from the list below.' },
+      { kind: 'instruction', text: 'Headings: i. Origins   ii. Growth   iii. A new role' },
+      { kind: 'prompt', text: 'Paragraph A  ->  choose one heading: i, ii, or iii' },
+      { kind: 'prompt', text: 'Paragraph B  ->  choose one heading: i, ii, or iii' },
+    ],
+  },
+  {
+    id: 'diagram-labeling',
+    label: 'Diagram Labeling - Gắn nhãn sơ đồ',
+    description: 'Tạo diagram có text box và mũi tên; mỗi blank là một câu hỏi con được đánh số liên tiếp.',
+    response: 'Điền nhãn vào từng vị trí được đánh số trên sơ đồ.',
+    englishPrompt: 'Label the diagram below.',
+    sample: [
+      { kind: 'instruction', text: 'Label the diagram below.' },
+      { kind: 'prompt', text: 'River source  -------->  [1] ______' },
+      { kind: 'prompt', text: 'Water wheel  -------->  [2] ______' },
+    ],
+  },
+  {
+    id: 'sentence-completion',
+    label: 'Hoàn thành câu (chọn từ danh sách)',
+    description: 'Học sinh hoàn thành câu bằng cách chọn từ từ danh sách gợi ý.',
+    response: 'Chọn từ trong danh sách để hoàn thành câu.',
+    sample: [
+      { kind: 'instruction', text: 'Complete each sentence using a word from the list below.' },
+      { kind: 'option', text: 'Word list: narrow   historic   central' },
+      { kind: 'prompt', text: 'The building stands on a ______ street.' },
+      { kind: 'answer', text: 'Đáp án mẫu: narrow' },
+    ],
+    englishPrompt: 'Complete each sentence using a word from the list below.',
+  },
+  {
+    id: 'short-answer',
+    label: 'Câu trả lời ngắn',
+    description: 'Học sinh viết câu trả lời ngắn (tối đa 3 từ).',
+    response: 'Tự viết câu trả lời, thường không quá ba từ.',
+    englishPrompt: 'Answer the questions below. Choose NO MORE THAN THREE WORDS from the passage for each answer.',
+    sample: [
+      { kind: 'prompt', text: 'Why was the library popular?' },
+      { kind: 'instruction', text: 'Choose NO MORE THAN THREE WORDS from the passage for each answer.' },
+      { kind: 'answer', text: 'Answer: ______' },
+    ],
+  },
+];
+
+const LEGACY_QUESTION_TYPES = READING_QUESTION_TYPES.map(({ id }) => id);
+
+function getReadingQuestionType(typeId) {
+  return READING_QUESTION_TYPES.find((type) => type.id === typeId);
+}
+
+function ReadingQuestionTypeGuide({ activeType, guideId, onApplyType }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [previewTypeId, setPreviewTypeId] = useState(activeType);
+  const previewType = getReadingQuestionType(previewTypeId) || READING_QUESTION_TYPES[0];
+
+  const toggleGuide = () => {
+    if (!isOpen) {
+      setPreviewTypeId(getReadingQuestionType(activeType)?.id || READING_QUESTION_TYPES[0].id);
+    }
+    setIsOpen((open) => !open);
+  };
+
+  return (
+    <div className="reading-question-type-guide">
+      <button
+        type="button"
+        className="reading-question-type-guide__toggle"
+        aria-expanded={isOpen}
+        aria-controls={guideId}
+        onClick={toggleGuide}
+      >
+        {isOpen ? 'Ẩn mẫu các dạng' : 'Xem mẫu các dạng câu hỏi'}
+      </button>
+      {isOpen && (
+        <div className="reading-question-type-guide__panel" id={guideId}>
+          <div
+            className="reading-question-type-guide__list"
+            role="group"
+            aria-label="Chọn dạng để xem ví dụ"
+          >
+            {READING_QUESTION_TYPES.map((type) => (
+              <button
+                type="button"
+                key={type.id}
+                className="reading-question-type-guide__type"
+                aria-pressed={previewTypeId === type.id}
+                onClick={() => setPreviewTypeId(type.id)}
+              >
+                {type.label}
+              </button>
+            ))}
+          </div>
+          <div className="reading-question-type-guide__preview" aria-live="polite">
+            <h4>{previewType.label}</h4>
+            <p className="reading-question-type-guide__description">
+              {previewType.description}
+            </p>
+            <p className="reading-question-type-guide__response">
+              <strong>Học sinh sẽ:</strong> {previewType.response}
+            </p>
+            <div
+              className="reading-question-type-guide__sample"
+              role="group"
+              aria-label="Mẫu câu hỏi"
+            >
+              {previewType.sample.map((line, index) => (
+                <p
+                  key={`${line.kind}-${index}`}
+                  className={`reading-question-type-guide__sample-line reading-question-type-guide__sample-line--${line.kind}`}
+                >
+                  {line.text}
+                </p>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="reading-question-type-guide__apply"
+              disabled={previewType.id === activeType}
+              onClick={() => {
+                onApplyType(previewType.id);
+                setIsOpen(false);
+              }}
+            >
+              {previewType.id === activeType ? 'Đang dùng loại này' : 'Dùng loại này'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const QuestionSection = ({
   passageIndex,
@@ -31,21 +291,6 @@ const QuestionSection = ({
 }) => {
   const primaryBlue = '#0e276f';
   const dangerRed = '#e03';
-  const legacyQuestionTypes = [
-    'multiple-choice',
-    'multi-select',
-    'fill-in-the-blanks',
-    'matching',
-    'true-false-not-given',
-    'yes-no-not-given',
-    'cloze-test',
-    'paragraph-matching',
-    'ielts-matching-headings',
-    'sentence-completion',
-    'short-answer',
-    'summary-completion',
-    'diagram-labeling',
-  ];
 
   // State to track which questions are expanded - first question is expanded by default
   const [expandedQuestions, setExpandedQuestions] = useState(() => {
@@ -86,6 +331,18 @@ const QuestionSection = ({
   const sectionQuestions = section?.questions || [];
   const lastQuestion = sectionQuestions[sectionQuestions.length - 1] || null;
   const appendsToDiagram = (lastQuestion?.questionType || lastQuestion?.type) === 'diagram-labeling';
+
+  const applyQuestionType = (question, questionIndex, newType) => {
+    const defaultObj = LEGACY_QUESTION_TYPES.includes(newType)
+      ? createDefaultQuestionByType(newType)
+      : getDefaultQuestionData(newType);
+    const newQuestion = {
+      ...question,
+      ...defaultObj,
+      questionNumber: question.questionNumber
+    };
+    onQuestionChange(passageIndex, sectionIndex, questionIndex, 'full', newQuestion);
+  };
 
   return (
     <div style={{
@@ -221,7 +478,11 @@ const QuestionSection = ({
           Câu hỏi trong Section ({section.questions?.length || 0})
         </h6>
 
-        {section.questions?.map((question, questionIndex) => (
+        {section.questions?.map((question, questionIndex) => {
+          const currentQuestionType = question.questionType || 'multiple-choice';
+          const currentQuestionTypeInfo = getReadingQuestionType(currentQuestionType);
+
+          return (
           <div key={questionIndex} style={{
             border: '1px solid #ddd',
             borderRadius: '6px',
@@ -257,7 +518,7 @@ const QuestionSection = ({
                 <InlineIcon name={expandedQuestions[questionIndex] ? 'chevron-down' : 'chevron-right'} size={12} style={{ color: 'white' }} />
               </button>
               <span style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>
-                Câu {question.questionNumber || '1'} <span style={{ color: '#0e276f', fontSize: '12px', fontWeight: 'normal' }}>({question.questionType === 'multiple-choice' ? 'Trắc nghiệm 1 đáp án' : question.questionType})</span>
+                Câu {question.questionNumber || '1'} <span style={{ color: '#0e276f', fontSize: '12px', fontWeight: 'normal' }}>({currentQuestionTypeInfo?.label || currentQuestionType})</span>
               </span>
               {expandedQuestions[questionIndex] && (
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -302,7 +563,7 @@ const QuestionSection = ({
                 {/* Question Number Input */}
                 <div style={{ marginBottom: '12px' }}>
                   <label style={{ fontWeight: '600', display: 'block', marginBottom: '6px', fontSize: '14px' }}>
-                    Số câu hỏi (Question Number): <span style={{ color: '#0e276f', fontSize: '12px', fontWeight: 'normal' }}>- {question.questionType === 'multiple-choice' ? 'Trắc nghiệm 1 đáp án' : question.questionType}</span>
+                    Số câu hỏi (Question Number): <span style={{ color: '#0e276f', fontSize: '12px', fontWeight: 'normal' }}>- {currentQuestionTypeInfo?.label || currentQuestionType}</span>
                   </label>
                   <p style={{ fontSize: '12px', color: '#666', margin: '0 0 6px 0' }}>
                     Ví dụ: 38-40 hoặc 38, 39, 40 hoặc chỉ 38
@@ -334,21 +595,12 @@ const QuestionSection = ({
                 {/* Question Type Select */}
                 <div style={{ marginBottom: '12px' }}>
                   <label style={{ fontWeight: '600', display: 'block', marginBottom: '6px', fontSize: '14px' }}>
-                    Loại câu hỏi: {question.questionType || '(not set)'}
+                    Loại câu hỏi: {currentQuestionTypeInfo?.label || question.questionType || '(not set)'}
                   </label>
                   <select
-                    value={question.questionType || 'multiple-choice'}
+                    value={currentQuestionType}
                     onChange={(e) => {
-                      const newType = e.target.value;
-                      const defaultObj = legacyQuestionTypes.includes(newType)
-                        ? createDefaultQuestionByType(newType)
-                        : getDefaultQuestionData(newType);
-                      const newQuestion = {
-                        ...question,
-                        ...defaultObj,
-                        questionNumber: question.questionNumber
-                      };
-                      onQuestionChange(passageIndex, sectionIndex, questionIndex, 'full', newQuestion);
+                      applyQuestionType(question, questionIndex, e.target.value);
                     }}
                     style={{
                       padding: '8px',
@@ -357,37 +609,29 @@ const QuestionSection = ({
                       width: '100%'
                     }}
                   >
-                    <option value="multiple-choice" title="Học sinh chọn 1 đáp án đúng từ 4-5 lựa chọn">Trắc nghiệm 1 đáp án</option>
-                    <option value="multi-select" title="Học sinh chọn nhiều đáp án đúng (tối thiểu 2 đáp án)">Trắc nghiệm nhiều đáp án</option>
-                    <option value="fill-in-the-blanks" title="Học sinh điền từ/cụm từ để hoàn thành câu (tối đa 3 từ)">Điền vào chỗ trống</option>
-                    <option value="matching" title="Học sinh ghép các mục từ cột trái với cột phải (ghép cặp)">Ghép cặp / Combobox</option>
-                    <option value="true-false-not-given" title="Học sinh chọn True (đúng), False (sai), hoặc Not Given (chưa đề cập)">True/False/Not Given</option>
-                    <option value="yes-no-not-given" title="Học sinh chọn Yes (có), No (không), hoặc Not Given (chưa đề cập)">Yes/No/Not Given</option>
-                    <option value="cloze-test" title="Học sinh điền từ vào các chỗ trống nhúng trong đoạn văn (Cloze Test)">Cloze Test - Điền chỗ trống trong đoạn</option>
-                    <option value="summary-completion" title="Hoàn thành đoạn tóm tắt bằng cách ghi chữ cái A-L tương ứng (Summary Completion)">Summary Completion - Complete the summary (A-L)</option>
-                    <option value="paragraph-matching" title="Học sinh tìm thông tin ở đoạn A-G để trả lời câu hỏi">Tìm thông tin ở đoạn nào (A-G)</option>
-                    <option value="ielts-matching-headings" title="IX: Ghép mỗi đoạn văn (A-G) với 1 heading phù hợp (i-x)">IX Matching Headings</option>
-                    <option value="diagram-labeling" title="Học sinh nhìn diagram, điền đáp án vào các nhãn được nối bằng mũi tên">Diagram Labeling - Gắn nhãn sơ đồ</option>
-                    <option value="sentence-completion" title="Học sinh hoàn thành câu bằng cách chọn từ từ danh sách gợi ý">Hoàn thành câu (chọn từ danh sách)</option>
-                    <option value="short-answer" title="Học sinh viết câu trả lời ngắn (tối đa 3 từ)">Câu trả lời ngắn</option>
+                    {READING_QUESTION_TYPES.map((type) => (
+                      <option key={type.id} value={type.id} title={type.description}>
+                        {type.label}
+                      </option>
+                    ))}
                   </select>
-                  
+
                   {/* Help text for question types */}
                   <div style={{ fontSize: '12px', color: '#666', marginTop: '6px', padding: '8px', backgroundColor: '#f0f8ff', borderRadius: '4px', borderLeft: '3px solid #0e276f' }}>
-                    {question.questionType === 'multiple-choice' && 'Học sinh chọn 1 đáp án đúng từ 4-5 lựa chọn.'}
-                    {question.questionType === 'multi-select' && 'Học sinh chọn nhiều đáp án đúng (tối thiểu 2 đáp án).'}
-                    {question.questionType === 'fill-in-the-blanks' && 'Học sinh điền từ hoặc cụm từ để hoàn thành câu (tối đa 3 từ).'}
-                    {question.questionType === 'matching' && 'Học sinh ghép các mục từ cột trái với cột phải.'}
-                    {question.questionType === 'true-false-not-given' && 'Học sinh chọn True, False hoặc Not Given.'}
-                    {question.questionType === 'yes-no-not-given' && 'Học sinh chọn Yes, No hoặc Not Given.'}
-                    {question.questionType === 'cloze-test' && 'Học sinh điền từ vào các chỗ trống nhúng trong đoạn văn bằng [BLANK].'}
-                    {question.questionType === 'summary-completion' && 'Hoàn thành đoạn tóm tắt bằng các lựa chọn A-L và gán đáp án cho từng [BLANK].'}
-                    {question.questionType === 'paragraph-matching' && 'Học sinh tìm thông tin ở đoạn A-G để trả lời câu hỏi.'}
-                    {question.questionType === 'ielts-matching-headings' && 'Ghép mỗi đoạn văn (A-G) với 1 heading phù hợp; có thể có headings dư.'}
-                    {question.questionType === 'diagram-labeling' && 'Tạo diagram có text box và mũi tên; mỗi blank là một câu hỏi con được đánh số liên tiếp.'}
-                    {question.questionType === 'sentence-completion' && 'Học sinh hoàn thành câu bằng cách chọn từ từ danh sách gợi ý.'}
-                    {question.questionType === 'short-answer' && 'Học sinh viết câu trả lời ngắn (tối đa 3 từ).'}
+                    <div>
+                      {currentQuestionTypeInfo?.description || 'Chọn dạng câu hỏi phù hợp với cấu trúc trong đề gốc.'}
+                    </div>
+                    {currentQuestionTypeInfo?.englishPrompt && (
+                      <div style={{ marginTop: '6px', color: '#334155' }}>
+                        <strong>Mẫu câu lệnh tiếng Anh:</strong> {currentQuestionTypeInfo.englishPrompt}
+                      </div>
+                    )}
                   </div>
+                  <ReadingQuestionTypeGuide
+                    activeType={currentQuestionType}
+                    guideId={`question-type-guide-${passageIndex}-${sectionIndex}-${questionIndex}`}
+                    onApplyType={(typeId) => applyQuestionType(question, questionIndex, typeId)}
+                  />
                 </div>
 
                 {/* Question Editors by Type */}
@@ -486,7 +730,7 @@ const QuestionSection = ({
                   />
                 )}
 
-                {![...legacyQuestionTypes].includes(question.questionType || 'multiple-choice') && (
+                {!LEGACY_QUESTION_TYPES.includes(currentQuestionType) && (
                   <div style={{ color: 'red', padding: '8px', backgroundColor: '#ffe0e0', borderRadius: '4px' }}>
                     Unknown question type: {question.questionType}
                   </div>
@@ -494,7 +738,8 @@ const QuestionSection = ({
               </>
             )}
           </div>
-        ))}
+          );
+        })}
 
         {/* Add Question Button */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
