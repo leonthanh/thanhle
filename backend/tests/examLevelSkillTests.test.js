@@ -27,6 +27,8 @@ jest.mock("../modules/cambridge/shared/readingTestUtils", () => ({
 }));
 
 const { ExamLevel, ExamLevelSubmission, ExamLevelTest } = require("../models");
+const { AppError } = require("../utils/AppError");
+const { scoreTest } = require("../modules/cambridge/shared/scoring");
 const service = require("../modules/examLevels/service");
 
 const level = {
@@ -455,5 +457,131 @@ describe("exam level skill test adapter", () => {
     expect(submission.update).toHaveBeenCalledWith(
       expect.objectContaining({ expiresAt: extendedExpiry })
     );
+  });
+
+  test("submits answers when the saved draft ID is stale", async () => {
+    ExamLevel.findOne.mockResolvedValue({
+      ...level,
+      skills: ["reading-writing"],
+      skillConfig: {
+        "reading-writing": { templateId: "gateway-reading-writing", durationMinutes: 60 },
+      },
+    });
+    ExamLevelTest.findOne.mockResolvedValue({
+      id: 20,
+      testType: "gateway-reading-writing",
+      title: "Prepare Reading and Writing 1",
+      classCode: "P1",
+    });
+    scoreTest.mockReturnValue({
+      score: 27,
+      total: 50,
+      percentage: 54,
+      detailedResults: {},
+      breakdown: null,
+    });
+    ExamLevelSubmission.findOne.mockResolvedValue(null);
+    const submission = { id: 8 };
+    ExamLevelSubmission.create.mockResolvedValue(submission);
+    const answers = { "0-0-0-0": "add" };
+
+    const result = await service.submitTest({
+      code: "prepare",
+      skill: "reading-writing",
+      id: 20,
+      body: { submissionId: 7, answers },
+      user: { id: 8, role: "student" },
+    });
+
+    expect(ExamLevelSubmission.findOne).toHaveBeenNthCalledWith(1, {
+      where: { id: 7, levelId: 4, testId: 20, userId: 8, finished: false },
+    });
+    expect(ExamLevelSubmission.findOne).toHaveBeenNthCalledWith(2, {
+      where: { levelId: 4, testId: 20, userId: 8, finished: false },
+    });
+    expect(ExamLevelSubmission.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        answers,
+        finished: true,
+        score: 27,
+        status: "submitted",
+        totalQuestions: 50,
+        userId: 8,
+      })
+    );
+    expect(result.submission).toBe(submission);
+  });
+
+  test("uses the current active draft when the saved draft ID is stale", async () => {
+    ExamLevel.findOne.mockResolvedValue({
+      ...level,
+      skills: ["reading-writing"],
+      skillConfig: {
+        "reading-writing": { templateId: "gateway-reading-writing", durationMinutes: 60 },
+      },
+    });
+    ExamLevelTest.findOne.mockResolvedValue({
+      id: 20,
+      testType: "gateway-reading-writing",
+      title: "Prepare Reading and Writing 1",
+      classCode: "P1",
+    });
+    scoreTest.mockReturnValue({
+      score: 27,
+      total: 50,
+      percentage: 54,
+      detailedResults: {},
+      breakdown: null,
+    });
+    const activeDraft = {
+      id: 8,
+      update: jest.fn().mockResolvedValue(undefined),
+    };
+    ExamLevelSubmission.findOne
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(activeDraft);
+
+    const result = await service.submitTest({
+      code: "prepare",
+      skill: "reading-writing",
+      id: 20,
+      body: { submissionId: 7, answers: { "0-0-0-0": "add" } },
+      user: { id: 8, role: "student" },
+    });
+
+    expect(activeDraft.update).toHaveBeenCalledWith(
+      expect.objectContaining({ finished: true, status: "submitted" })
+    );
+    expect(ExamLevelSubmission.create).not.toHaveBeenCalled();
+    expect(result.submission).toBe(activeDraft);
+  });
+
+  test("returns an application error for unauthenticated exam submissions", async () => {
+    ExamLevel.findOne.mockResolvedValue({
+      ...level,
+      skills: ["reading-writing"],
+      skillConfig: {
+        "reading-writing": { templateId: "gateway-reading-writing", durationMinutes: 60 },
+      },
+    });
+    ExamLevelTest.findOne.mockResolvedValue({
+      id: 20,
+      testType: "gateway-reading-writing",
+    });
+
+    let error;
+    try {
+      await service.submitTest({
+        code: "prepare",
+        skill: "reading-writing",
+        id: 20,
+        body: { answers: {} },
+      });
+    } catch (caught) {
+      error = caught;
+    }
+
+    expect(error).toBeInstanceOf(AppError);
+    expect(error).toMatchObject({ code: "UNAUTHORIZED", statusCode: 401 });
   });
 });

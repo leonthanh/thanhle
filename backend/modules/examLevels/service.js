@@ -1,6 +1,7 @@
 const { Op } = require("sequelize");
 const { ExamLevel, ExamLevelSubmission, ExamLevelTest } = require("../../models");
 const { processTestParts } = require("../../utils/clozParser");
+const { AppError } = require("../../utils/AppError");
 const { normalizeStudentResultVisibility } = require("../../utils/studentResultVisibility");
 const {
   DEFAULT_EXTENSION_MINUTES,
@@ -22,11 +23,17 @@ const ALLOWED_SKILLS = new Set([
 ]);
 const PREPARE_LISTENING_DURATION_MINUTES = 15;
 
-const createServiceError = (statusCode, message) => {
-  const error = new Error(message);
-  error.statusCode = statusCode;
-  return error;
-};
+const createServiceError = (statusCode, message) => new AppError({
+  code: ({
+    400: "BAD_REQUEST",
+    401: "UNAUTHORIZED",
+    403: "FORBIDDEN",
+    404: "NOT_FOUND",
+    409: "CONFLICT",
+  })[statusCode] || "EXAM_LEVEL_ERROR",
+  message,
+  statusCode,
+});
 
 const normalizeCode = (value) => String(value || "").trim().toLowerCase();
 const normalizeSkill = (value) => String(value || "").trim().toLowerCase();
@@ -469,26 +476,28 @@ const submitTest = async ({ code, skill, id, body = {}, user }) => {
     if (submissionId && Number(submission?.id) !== submissionId) {
       throw createServiceError(404, "Active placement draft not found.");
     }
-  } else if (submissionId) {
-    submission = await ExamLevelSubmission.findOne({
-      where: {
-        id: submissionId,
-        levelId: level.id,
-        testId: test.id,
-        userId,
-        finished: false,
-      },
-    });
-    if (!submission) throw createServiceError(404, "Active exam draft not found.");
   } else {
-    submission = await ExamLevelSubmission.findOne({
-      where: {
-        levelId: level.id,
-        testId: test.id,
-        userId,
-        finished: false,
-      },
-    });
+    if (submissionId) {
+      submission = await ExamLevelSubmission.findOne({
+        where: {
+          id: submissionId,
+          levelId: level.id,
+          testId: test.id,
+          userId,
+          finished: false,
+        },
+      });
+    }
+    if (!submission) {
+      submission = await ExamLevelSubmission.findOne({
+        where: {
+          levelId: level.id,
+          testId: test.id,
+          userId,
+          finished: false,
+        },
+      });
+    }
   }
   const submittedAt = new Date();
   const values = {

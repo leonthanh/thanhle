@@ -48,6 +48,7 @@ import {
   getCurrentListeningAudioUrl,
   getListeningAudioMetadata,
 } from "../utils/examListeningAudio";
+import { normalizeNotesCompletionParts } from "../utils/normalizePromptHtml";
 import { ExamCoreQuestionDisplay, CompactExamCoreQuestionDisplay } from "../components/ExamCoreQuestionCards";
 import { ColourWriteStudentSection, DrawLinesQuestion, ImageTickSlideSection, LetterMatchingStudentSection } from "../components/ExamCoreListeningRuntimeSections";
 import { OpenClozeSectionDisplay, GapMatchSectionDisplay } from "../components/ExamCoreSectionDisplays";
@@ -299,9 +300,10 @@ const ExamCoreListeningRuntimePage = ({
         const data = await res.json();
 
         // Parse parts JSON
-        let parsedParts = typeof data.parts === "string"
+        const parts = typeof data.parts === "string"
           ? JSON.parse(data.parts)
           : data.parts;
+        const parsedParts = normalizeNotesCompletionParts(parts);
 
         const parsedData = {
           ...data,

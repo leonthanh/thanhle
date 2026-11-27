@@ -33,7 +33,10 @@ import {
 import "./ExamCoreTestBuilder.css";
 import { computeQuestionStarts, getQuestionCountForSection } from "../utils/examQuestionNumbering";
 import renumberGatewayClozeQuestion from "../utils/gatewayClozeNumbering";
-import { normalizeQuillPromptHtml } from "../utils/normalizePromptHtml";
+import {
+  normalizeNotesCompletionParts,
+  normalizeQuillPromptHtml,
+} from "../utils/normalizePromptHtml";
 import { normalizeAudioReference, normalizeListeningPartsAudio } from "../../../../shared/utils/audioUrls";
 import resolveAuthUserDisplayName from "../../../../shared/utils/authUserDisplayName";
 import GATEWAY_WRITING_RUBRIC from "../../../../shared/config/gatewayWritingRubric";
@@ -1291,7 +1294,11 @@ const ExamCoreTestBuilder = ({
       ) {
         return buildGatewayListeningTemplateParts();
       }
-      const normalizedParts = normalizePeopleMatchingIds(normalizeListeningPartsAudio(normalizeShortMessageParts(savedData.parts)));
+      const normalizedParts = normalizePeopleMatchingIds(
+        normalizeListeningPartsAudio(
+          normalizeShortMessageParts(normalizeNotesCompletionParts(savedData.parts))
+        )
+      );
       if (isGatewayReadingWriting) {
         return ensureGatewayReadingWritingSections(normalizedParts);
       }
@@ -1355,7 +1362,11 @@ const ExamCoreTestBuilder = ({
       }
 
       if (Array.isArray(partsData)) {
-        const normalizedParts = normalizePeopleMatchingIds(normalizeListeningPartsAudio(normalizeShortMessageParts(partsData)));
+        const normalizedParts = normalizePeopleMatchingIds(
+          normalizeListeningPartsAudio(
+            normalizeShortMessageParts(normalizeNotesCompletionParts(partsData))
+          )
+        );
         setParts(prepareFlexibleReadingWriting
           ? markFlexiblePrepareParts(normalizedParts)
           : isGatewayReadingWriting && !prepareReadingWriting
@@ -1953,7 +1964,11 @@ const ExamCoreTestBuilder = ({
   const saveToLocalStorage = useCallback(() => {
     try {
       setIsSaving(true);
-      const normalizedParts = normalizeListeningPartsAudio(normalizeShortMessageParts(getPartsSnapshotWithCurrentInstruction()));
+      const normalizedParts = normalizeListeningPartsAudio(
+        normalizeShortMessageParts(
+          normalizeNotesCompletionParts(getPartsSnapshotWithCurrentInstruction())
+        )
+      );
       const dataToSave = {
         title,
         classCode,
@@ -2069,18 +2084,20 @@ const ExamCoreTestBuilder = ({
       }
     }
 
-    const cleanedParts = normalizeShortMessageParts(preparePartsSnapshot.map((part) => ({
-      ...part,
-      sections: (part.sections || []).map((section) => ({
-        ...section,
-        questions: (section.questions || []).map((q) => {
-          if (section.questionType === 'cloze-test' || q.questionType === 'cloze-test') {
-            return { ...q, passageText: cleanupClozeHtml(q.passageText) };
-          }
-          return q;
-        }),
-      })),
-    })));
+    const cleanedParts = normalizeNotesCompletionParts(
+      normalizeShortMessageParts(preparePartsSnapshot.map((part) => ({
+        ...part,
+        sections: (part.sections || []).map((section) => ({
+          ...section,
+          questions: (section.questions || []).map((q) => {
+            if (section.questionType === 'cloze-test' || q.questionType === 'cloze-test') {
+              return { ...q, passageText: cleanupClozeHtml(q.passageText) };
+            }
+            return q;
+          }),
+        })),
+      })))
+    );
     const normalizedCleanedParts = normalizeListeningPartsAudio(
       prepareFlexibleReadingWriting ? markFlexiblePrepareParts(cleanedParts) : cleanedParts
     );

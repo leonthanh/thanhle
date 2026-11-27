@@ -5,6 +5,7 @@
   --good:#2D7A4C; --good-soft:#E5F3EA; --prog:#1F5FA3; --prog-soft:#E5EEF9; --weak:#A8650A; --weak-soft:#FAF0DF; --spec:#76479A; --spec-soft:#F1E9F7;
   --f-display:"Lora",Georgia,"Times New Roman",serif; --f-body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
   --r:10px;
+  color:var(--ink);
 }
 @media (prefers-color-scheme: dark){.starEduReport:not([data-theme="light"]){
   --bg:#0E1620; --surface:#16212D; --surface-2:#1B2836; --ink:#E4EBF2; --muted:#98A8B9; --line:#2A3A4B;
@@ -80,7 +81,7 @@
 .starEduReport .sit button[data-s="prog"][aria-pressed="true"]{background:var(--prog);border-color:var(--prog);color:#fff}
 .starEduReport .sit button[data-s="weak"][aria-pressed="true"]{background:var(--weak);border-color:var(--weak);color:#fff}
 .starEduReport .sit button[data-s="spec"][aria-pressed="true"]{background:var(--spec);border-color:var(--spec);color:#fff}
-.starEduReport:not([data-theme="light"]) .sit button[aria-pressed="true"]{color:#0E1620}
+.starEduReport:not([data-theme="light"]) .sit button[aria-pressed="true"]{color:#fff}
 @media (prefers-color-scheme: light){.starEduReport:not([data-theme="dark"]) .sit button[aria-pressed="true"]{color:#fff}}
 .starEduReport[data-theme="light"] .sit button[aria-pressed="true"]{color:#fff}
 .starEduReport .score{display:flex;gap:8px;align-items:center}
@@ -107,7 +108,7 @@
 .starEduReport .opt:hover{background:var(--surface-2);border-color:var(--line)}
 .starEduReport .opt .box{width:22px;height:22px;border-radius:6px;border:1.5px solid var(--line);display:grid;place-items:center;font-size:.75rem;font-weight:700;color:transparent;margin-top:1px;font-variant-numeric:tabular-nums}
 .starEduReport .opt[aria-pressed="true"]{background:var(--teal-soft);border-color:var(--teal)}
-.starEduReport .opt[aria-pressed="true"] .box{background:var(--teal);border-color:var(--teal);color:var(--surface)}
+.starEduReport .opt[aria-pressed="true"] .box{background:var(--teal);border-color:var(--teal);color:#fff}
 .starEduReport .opt b{font-weight:600}
 .starEduReport .opt .tag{font-size:.72rem;color:var(--muted);margin-left:6px;white-space:nowrap}
 .starEduReport .ph{background:var(--warn-soft);color:var(--warn);border-radius:4px;padding:0 3px}
@@ -115,8 +116,8 @@
 .starEduReport .add input{flex:1;min-width:0;border:1px dashed var(--line);border-radius:7px;padding:7px 10px;background:var(--surface)}
 .starEduReport .add button,.starEduReport .btn{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:6px 12px;cursor:pointer;font-size:.85rem;white-space:nowrap}
 .starEduReport .btn:hover,.starEduReport .add button:hover{border-color:var(--teal);color:var(--teal)}
-.starEduReport .btn.primary{background:var(--teal);border-color:var(--teal);color:var(--surface);font-weight:600}
-.starEduReport .btn.primary:hover{filter:brightness(1.07);color:var(--surface)}
+.starEduReport .btn.primary{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600}
+.starEduReport .btn.primary:hover{filter:brightness(1.07);color:#fff}
 .starEduReport .empty{color:var(--muted);font-size:.86rem;padding:6px 10px 12px}
 
 .starEduReport .sheet{position:sticky;top:calc(env(safe-area-inset-top,0px) + 62px);background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
