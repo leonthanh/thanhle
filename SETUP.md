@@ -255,7 +255,7 @@ git push origin main
 - Frontend được build trong CI bằng `npm ci` và `npm run build`.
 - Frontend sau đó được mirror lên `/ix.star-siec.edu.vn/frontend/build/` với chế độ `--delete`, nên file build cũ bị xóa trên server.
 - Backend được đóng gói source, tạo `.env` từ GitHub Secrets, rồi mirror lên `/ix.star-siec.edu.vn/backend/` với chế độ `--delete`.
-- Backend artifact bao gồm hai mẫu báo cáo trong `backend/private/progress-reports/`; workflow kiểm tra chúng trước khi upload.
+- Báo cáo tiến độ được hiển thị và xuất từ frontend React; backend không còn đóng gói các mẫu HTML báo cáo cũ.
 - Deploy backend giữ nguyên `uploads` và không upload `node_modules`.
 - FTP service phải có chứng chỉ TLS hợp lệ cho `ftp.star-siec.edu.vn`; workflow xác minh chứng chỉ trước khi deploy.
 - Workflow hiện tại không chạy `npm install` hoặc `npm ci` trên server.
