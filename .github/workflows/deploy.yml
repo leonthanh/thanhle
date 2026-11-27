@@ -177,7 +177,6 @@ jobs:
           set ftp:ssl-protect-data true
           set ftp:ssl-protect-list true
           set ssl:verify-certificate yes
-          mkdir -p /ix.star-siec.edu.vn/frontend/build/
           mirror -R --continue --delete --verbose=1 --parallel=1 \
             -x '(^|/).*\.map$' \
             -x '(^|/).*\.txt$' \
@@ -304,7 +303,6 @@ jobs:
           set ftp:ssl-protect-list true
           set ssl:verify-certificate yes
           debug 3
-          mkdir -p /ix.star-siec.edu.vn/backend/
           mirror -R --continue --delete --verbose=1 --parallel=1 \
             -x '(^|/)(node_modules|uploads)(/|$)' \
             -x '(^|/).*\.map$' \
