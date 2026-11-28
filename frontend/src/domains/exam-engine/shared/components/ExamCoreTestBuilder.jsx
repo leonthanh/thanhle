@@ -1259,7 +1259,9 @@ const ExamCoreTestBuilder = ({
   const savedData = shouldUseDraft ? loadSavedData() : null;
 
   // Form fields
-  const [title, setTitle] = useState(savedData?.title || '');
+  const [title, setTitle] = useState(
+    savedData?.title || (prepareFlexibleReadingWriting ? displayName || 'Prepare Reading & Writing' : '')
+  );
   const [classCode, setClassCode] = useState(savedData?.classCode || '');
   const [teacherName, setTeacherName] = useState(
     isCreateMode ? currentTeacherName : savedData?.teacherName || ''
@@ -1340,7 +1342,7 @@ const ExamCoreTestBuilder = ({
 
   useEffect(() => {
     if (initialData) {
-      setTitle(initialData.title || '');
+      setTitle(initialData.title || (prepareFlexibleReadingWriting ? displayName || 'Prepare Reading & Writing' : ''));
       setClassCode(initialData.classCode || '');
       setTeacherName(initialData.teacherName || '');
       setStudentResultVisibility(
@@ -1374,7 +1376,7 @@ const ExamCoreTestBuilder = ({
             : normalizedParts);
       }
     }
-  }, [defaultQuestionType, initialData, isGatewayReadingWriting, normalizePeopleMatchingIds, normalizeShortMessageParts, prepareFlexibleReadingWriting, prepareReadingWriting]);
+  }, [defaultQuestionType, displayName, initialData, isGatewayReadingWriting, normalizePeopleMatchingIds, normalizeShortMessageParts, prepareFlexibleReadingWriting, prepareReadingWriting]);
 
   // State - Load from savedData if available
   const [parts, setParts] = useState(getInitialParts());
@@ -2853,32 +2855,40 @@ const ExamCoreTestBuilder = ({
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: isMoversReading ? '14px' : '10px' }}>
-            <div>
-              <label style={{ 
-                display: 'block', 
-                marginBottom: '4px', 
-                fontWeight: 600, 
-                color: '#6b7280',
-                fontSize: '12px',
-              }}>
-                {isMoversReading ? 'Tiêu đề *' : 'Tiêu đề đề thi *'}
-              </label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder={isMoversReading ? 'VD: MOVERS Reading Test – Tháng 10' : 'VD: KET Test 1'}
-                style={{
-                  width: '100%',
-                  padding: '7px 10px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: prepareFlexibleReadingWriting
+              ? 'repeat(3, minmax(0, 1fr))'
+              : 'repeat(4, minmax(0, 1fr))',
+            gap: isMoversReading ? '14px' : '10px',
+          }}>
+            {!prepareFlexibleReadingWriting && (
+              <div>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '4px', 
+                  fontWeight: 600, 
+                  color: '#6b7280',
+                  fontSize: '12px',
+                }}>
+                  {isMoversReading ? 'Tiêu đề *' : 'Tiêu đề đề thi *'}
+                </label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={isMoversReading ? 'VD: MOVERS Reading Test – Tháng 10' : 'VD: KET Test 1'}
+                  style={{
+                    width: '100%',
+                    padding: '7px 10px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            )}
             <div>
               <label style={{ 
                 display: 'block', 
