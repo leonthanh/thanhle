@@ -24,7 +24,7 @@ export const buildAdminRoutes = () => [
   <Route key="admin-gateway-submissions" path="/admin/gateway-submissions" element={renderProtected('teacher', <GatewaySubmissionsPage />)} />,
   <Route key="admin-progress-reports" path="/admin/progress-reports" element={renderProtected('teacher', <ProgressReportsPage />)} />,
   <Route key="admin-root" path="/admin" element={renderProtected('teacher', <Navigate to="/admin/writing-submissions" replace />)} />,
-  <Route key="admin-display-settings" path="/admin/display-settings" element={renderProtected('admin', <AdminDisplaySettingsPage />)} />,
+  <Route key="admin-display-settings" path="/admin/display-settings" element={renderProtected('teacher', <AdminDisplaySettingsPage />)} />,
   <Route key="admin-exam-levels-legacy" path="/admin/exam-levels" element={renderProtected('teacher', <Navigate to="/admin/prepare" replace />)} />,
   <Route key="admin-runtime-sync-metrics" path="/admin/runtime-sync-metrics" element={renderProtected('admin', <AdminRuntimeSyncMetricsPage />)} />,
   <Route key="admin-teacher-permissions" path="/admin/teacher-permissions" element={renderProtected('admin', <TeacherPermissionsPage />)} />,

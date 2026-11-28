@@ -157,6 +157,15 @@ const NavIcon = ({ name }) => {
           <path d="m9 12 2 2 4-4" />
         </svg>
       );
+    case "analytics":
+      return (
+        <svg {...sharedProps}>
+          <path d="M3 3v18h18" />
+          <path d="M7 14v-3" />
+          <path d="M12 14V7" />
+          <path d="M17 14V5" />
+        </svg>
+      );
     case "management":
       return (
         <svg {...sharedProps}>
@@ -1675,6 +1684,7 @@ const AdminNavbar = () => {
     pathname.startsWith("/admin/display-settings") ||
     pathname.startsWith("/admin/prepare") ||
     pathname.startsWith("/admin/runtime-sync-metrics");
+  const isTestActivityCurrent = pathname.startsWith("/admin/display-settings");
   const isExamLevelCurrent = pathname.startsWith("/exam-levels/");
   const prepareLevelName =
     examLevels.find((level) => String(level.code || "").toLowerCase() === "prepare")?.name ||
@@ -2240,6 +2250,14 @@ const AdminNavbar = () => {
         <div className="adminNavbar__mobileQuickGrid">
           {renderMobileQuickLink("/review", "Review", "Open review queue and submission flow", "review")}
           {renderMobileQuickLink("/select-test", "Test List", "Browse and edit available tests", "tests")}
+          {user?.role === "teacher"
+            ? renderMobileQuickLink(
+                "/admin/display-settings",
+                "Test activity",
+                "View platform-wide test activity and submissions",
+                "analytics"
+              )
+            : null}
           {["admin", "teacher"].includes(user?.role)
             ? renderMobileProgressReports()
             : null}
@@ -2649,6 +2667,20 @@ const AdminNavbar = () => {
           <span className="adminNavbar__icon" aria-hidden="true"><NavIcon name="review" /></span>
           <span className="adminNavbar__label">Review</span>
         </Link>
+
+        {user?.role === "teacher" ? (
+          <Link
+            to="/admin/display-settings"
+            className={`adminNavbar__link${isTestActivityCurrent ? " adminNavbar__link--active" : ""}`}
+            title="Test activity"
+            aria-current={isTestActivityCurrent ? "page" : undefined}
+            onMouseEnter={() => preloadAdminRoute("/admin/display-settings")}
+            onFocus={() => preloadAdminRoute("/admin/display-settings")}
+          >
+            <span className="adminNavbar__icon" aria-hidden="true"><NavIcon name="analytics" /></span>
+            <span className="adminNavbar__label">Test activity</span>
+          </Link>
+        ) : null}
 
         {["admin", "teacher"].includes(user?.role) && (
           <div

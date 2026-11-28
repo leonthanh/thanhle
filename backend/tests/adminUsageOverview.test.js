@@ -48,7 +48,11 @@ jest.mock('../models/AnalyticsEvent', () => ({
 }));
 jest.mock('../middlewares/auth', () => ({
   requireAuth: (_req, _res, next) => next(),
-  requireRole: () => (_req, _res, next) => next(),
+  requireRole: (...allowedRoles) => {
+    const middleware = (_req, _res, next) => next();
+    middleware.allowedRoles = allowedRoles;
+    return middleware;
+  },
 }));
 jest.mock('../logger', () => ({ logError: jest.fn() }));
 
@@ -105,6 +109,15 @@ describe('GET /admin/usage-overview', () => {
     AnalyticsEvent.findAll.mockResolvedValue([]);
     countModels.forEach((Model) => Model.count.mockResolvedValue(0));
     submissionModels.forEach((Model) => Model.findAll.mockResolvedValue([]));
+  });
+
+  test('allows both teachers and admins to view the overview', () => {
+    const route = router.stack.find(
+      (entry) => entry.route?.path === '/usage-overview' && entry.route.methods?.get
+    );
+    const roleGuard = route?.route.stack.find((entry) => Array.isArray(entry.handle.allowedRoles));
+
+    expect(roleGuard?.handle.allowedRoles).toEqual(['admin', 'teacher']);
   });
 
   test('returns daily and month-to-date activity, including Gateway and Prepare', async () => {
@@ -186,5 +199,58 @@ describe('GET /admin/usage-overview', () => {
       gateway: 50,
       prepare: 70,
     });
+  });
+
+  test('returns Cambridge Orange activity broken down by level', async () => {
+    const now = new Date();
+    CambridgeSubmission.findAll
+      .mockResolvedValueOnce([
+        { id: 10, userId: 101, testType: 'ket-listening' },
+        { id: 11, userId: 102, testType: 'movers-reading' },
+        { id: 12, userId: 103, testType: 'unknown-reading' },
+      ])
+      .mockResolvedValueOnce([
+        { id: 20, userId: 201, testType: 'ket-reading', finished: true, createdAt: now, updatedAt: now },
+        { id: 21, userId: 201, testType: 'ket-listening', finished: true, createdAt: now, updatedAt: now },
+        { id: 22, userId: 202, testType: 'pet-reading', finished: true, createdAt: now, updatedAt: now },
+        { id: 23, userId: 203, testType: 'flyers-listening', finished: null, createdAt: now, updatedAt: now },
+        { id: 24, userId: 204, testType: 'movers-listening', finished: false, createdAt: now, updatedAt: now },
+        { id: 25, userId: 205, testType: 'starters-reading', finished: true, createdAt: now, updatedAt: now },
+      ]);
+    CambridgeSubmission.count.mockResolvedValueOnce(5).mockResolvedValueOnce(5);
+
+    const response = {
+      json: jest.fn(),
+      status: jest.fn(function status() {
+        return this;
+      }),
+    };
+
+    await usageOverviewHandler({}, response);
+
+    const payload = response.json.mock.calls[0][0];
+    expect(payload.live.cambridgeSessionsByLevel).toEqual({
+      ket: 1,
+      pet: 0,
+      flyers: 0,
+      movers: 1,
+      starters: 0,
+    });
+    expect(payload.today.cambridgeUsersByLevel).toEqual({
+      ket: 1,
+      pet: 1,
+      flyers: 1,
+      movers: 1,
+      starters: 1,
+    });
+    expect(payload.today.cambridgeSubmissionsByLevel).toEqual({
+      ket: 2,
+      pet: 1,
+      flyers: 1,
+      movers: 0,
+      starters: 1,
+    });
+    expect(payload.month.cambridgeUsersByLevel).toEqual(payload.today.cambridgeUsersByLevel);
+    expect(payload.month.cambridgeSubmissionsByLevel).toEqual(payload.today.cambridgeSubmissionsByLevel);
   });
 });

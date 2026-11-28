@@ -1,6 +1,6 @@
 # SKILL: thanhle – Nền tảng học & thi tiếng Anh (star-siec / ix)
 
-> Đọc file này ĐẦU TIÊN mỗi phiên mới, rồi làm theo câu lệnh tiếp theo của anh. Khi thêm tính năng lớn, API, bảng DB hay đổi quy trình deploy → cập nhật file này.
+> `.github/copilot-instructions.md` yêu cầu Copilot đọc file này trước khi xử lý yêu cầu dự án. Đây là bản tóm tắt; hãy đối chiếu mã nguồn và tài liệu hiện hành khi cần. Cập nhật file khi có thay đổi lớn về tính năng, API, DB hoặc deploy.
 > Trả lời anh bằng tiếng Việt, ngắn gọn. Anh xưng "anh", gọi AI là "em".
 
 ## 1. Mục tiêu
@@ -15,6 +15,7 @@ Web full-stack dạy & thi tiếng Anh cho học sinh Việt Nam. Giáo viên t�
 thanhle/
 ├── backend/        server.js, db.js, models/, routes/, modules/, middlewares/, utils/, scripts/ (migrate/backfill), tests/, uploads/
 ├── frontend/       src/{app,components,config,domains,features,shared}, e2e/, vite.config.mjs
+├── .github/copilot-instructions.md   (hướng dẫn Copilot đọc tài liệu dự án)
 ├── .github/workflows/deploy.yml   (CI/CD → cPanel qua FTPS)
 ├── docs/, tests/, scripts/
 ├── README.md (deploy + secrets), SETUP.md (cài đặt), GIT_WORKFLOW.md, tongquan.md (tổng quan)
@@ -25,7 +26,11 @@ thanhle/
 ## 4. Lệnh chạy
 Backend (`cd backend`): `npm install`, `npm run dev` (nodemon), `npm start`, `npm test` (jest). Cần `backend/.env` (xem `.env.example`: DB_*, JWT_*, FRONTEND_URL, EMAIL_*, OPENAI_API_KEY, GEMINI_API_KEY, ZALO_*).
 Frontend (`cd frontend`): `npm install`, `npm start` (vite), `npm run build` (ra `dist/`), `npm test`, `npm run test:e2e`, `npm run lint`.
-Migration/backfill (backend): `npm run migrate:add-listening-autosave-fields`, `migrate:general-model-separation[:apply]`, `backfill:writing-isdraft-null[:apply]` (luôn chạy dry-run trước).
+Migration/backfill (backend):
+- `npm run migrate:add-listening-autosave-fields`
+- `npm run migrate:general-model-separation` (dry-run), `npm run migrate:general-model-separation:apply`
+- `npm run backfill:writing-isdraft-null` (dry-run), `npm run backfill:writing-isdraft-null:apply`
+Review kết quả dry-run và xác nhận backup trước khi apply thay đổi production.
 
 ## 5. Danh sách API (prefix trong server.js)
 | Prefix | File route | Nội dung |
@@ -44,6 +49,7 @@ Migration/backfill (backend): `npm run migrate:add-listening-autosave-fields`, `
 | /api/settings | settings.js | cấu hình app |
 | /api/ai | ai.js | tính năng AI (rate limit riêng) |
 | /api/upload | upload.js | upload file (static `/uploads`) |
+`GET /api/admin/usage-overview` dành cho role `admin` và `teacher`, giữ các tổng theo Cambridge và bổ sung breakdown theo Orange level: `live.cambridgeSessionsByLevel`; `today`/`month.cambridgeUsersByLevel` và `cambridgeSubmissionsByLevel`. Keys: `ket`, `pet`, `flyers`, `movers`, `starters`.
 > TODO: bổ sung chi tiết endpoint/method/quyền khi đụng tới từng module.
 
 ## 6. Schema DB (Sequelize models, MySQL – backend/models/)
@@ -56,8 +62,11 @@ Migration/backfill (backend): `npm run migrate:add-listening-autosave-fields`, `
 
 ## 7. Git workflow (xem GIT_WORKFLOW.md)
 - Làm trên feature branch (vd `feature/thanh`), tạo PR → `main` bằng **Squash and merge** (trigger deploy).
-- Sau khi squash merge, PHẢI đồng bộ branch trước khi code tiếp: `git fetch origin` → `git checkout feature/thanh` → `git merge main` (hoặc rebase) để tránh conflict.
-- `git status` trước khi commit/push. Không commit `.env`, secrets.
+- Trước khi đổi branch, pull hoặc merge, kiểm tra `git status --short --branch`; xử lý các thay đổi local có chủ đích và kết thúc/hủy merge đang dở trước.
+- Với task mới sau khi PR đã squash-merge, ưu tiên tạo branch mới từ `origin/main`: `git fetch origin` → `git switch -c feature/next-task origin/main` (đổi `next-task` thành tên task).
+- Nếu cố ý tiếp tục dùng `feature/thanh`: kiểm tra `git status` không có merge đang dở và đã xử lý các thay đổi local, rồi chạy `git fetch origin` → `git switch feature/thanh` → `git merge --ff-only origin/feature/thanh` → `git merge origin/main`. Không merge `main` local nếu chưa cập nhật nó.
+- Nếu `git status` báo `MERGING`, không checkout/pull tiếp: resolve rồi `git add <file>` và `git commit` để hoàn tất, hoặc `git merge --abort` để hủy.
+- Kiểm tra `git status` và chỉ stage file dự định commit; không commit `.env`/secrets, không force-push nếu chưa được yêu cầu.
 
 ## 8. Checklist deploy (xem README.md)
 1. Squash & merge PR vào `main` (hoặc push main / chạy tay workflow_dispatch).
@@ -76,8 +85,10 @@ Migration/backfill (backend): `npm run migrate:add-listening-autosave-fields`, `
 
 ## 10. Trạng thái & việc tiếp theo
 - Đã có: Reading/Listening/Writing, Cambridge/Gateway/General, Placement, Exam Levels, Admin, Analytics, AI, Zalo login, CI/CD cPanel.
-- Đang làm / TODO: (anh cập nhật ở đây; em ghi lại sau mỗi phiên làm việc)
-  - [ ] …
+- Việc đang làm: Chưa có task cụ thể được ghi nhận ở đây. Không suy diễn TODO; cập nhật khi có việc đang mở cần theo dõi.
 
 ## 11. Nhật ký phiên
 - 2026-11-28: Tạo skill.md ban đầu.
+- 2026-11-28: Thêm hướng dẫn Copilot tự đọc project context, làm rõ Git sync và thay placeholder TODO.
+- 2026-11-28: Ghi nhận breakdown Orange level trong admin usage overview.
+- 2026-11-28: Cho phép giáo viên xem Test activity qua navbar.
