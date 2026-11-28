@@ -1,4 +1,29 @@
-Dưới đây là hướng dẫn đơn giản và giải thích chi tiết về các lệnh Git liên quan đến workflow bạn mô tả, cũng như lý do tại sao bạn gặp conflict sau khi squash and merge. Tôi sẽ giải thích từng bước một cách dễ hiểu, kèm ví dụ thực tế. Bạn có thể áp dụng ngay vào dự án của mình.
+# Quy trình Git hiện hành
+
+Kiểm tra `git status --short --branch` trước khi đổi nhánh, pull, merge hoặc commit. Nếu repo đang `MERGING`, hãy hoàn tất merge hoặc hủy bằng `git merge --abort` trước; không checkout/pull tiếp. Xử lý các thay đổi local có chủ đích trước khi sync; không xóa chúng bằng reset/checkout để vượt qua cảnh báo.
+
+Sau khi PR được squash-merge:
+
+- Với task mới, tạo branch mới từ `origin/main`:
+  ```bash
+  git fetch origin
+  git switch -c feature/next-task origin/main
+  ```
+  Đổi `next-task` thành tên task mới và chọn tên chưa tồn tại.
+- Nếu cố ý tiếp tục dùng `feature/thanh`, đồng bộ branch remote rồi merge `origin/main` mới nhất:
+  ```bash
+  git fetch origin
+  git switch feature/thanh
+  git merge --ff-only origin/feature/thanh
+  git merge origin/main
+  ```
+  Nếu lệnh `--ff-only` thất bại, dừng lại kiểm tra lịch sử; không reset hoặc force-push để vượt qua.
+- Khi có conflict, resolve file, `git add <file>` và `git commit` để hoàn tất merge. Nếu muốn hủy merge, dùng `git merge --abort`.
+- Trước khi commit/push, xem lại `git status` và chỉ stage các file dự định đưa vào commit. Không commit `.env`/secrets; không force-push nếu chưa được yêu cầu.
+
+> Các giải thích và ví dụ bên dưới là ghi chú tích lũy. Nếu có hướng dẫn mâu thuẫn, ưu tiên quy trình hiện hành ở trên.
+
+## Giải thích và tình huống tham khảo
 
 ### 1. **Các lệnh Git cơ bản bạn cần biết (tóm tắt ngắn gọn)**
 Git là hệ thống quản lý phiên bản, giúp theo dõi thay đổi code. Dưới đây là các lệnh phổ biến bạn dùng trong workflow:
@@ -23,7 +48,7 @@ Git là hệ thống quản lý phiên bản, giúp theo dõi thay đổi code. 
 
 - **`git branch -d <branch>`**: Xóa branch local sau khi merge.
 
-**Lưu ý chung**: Luôn dùng `git status` để kiểm tra trước khi commit/push. Nếu sai, dùng `git reset` để undo.
+**Lưu ý chung**: Luôn dùng `git status` để kiểm tra trước khi commit/push. Không dùng `git reset` hoặc `git checkout --` để undo khi chưa xem diff và xác nhận chính xác thay đổi sẽ bị loại bỏ.
 
 ### 2. **Giải thích vấn đề conflict của bạn (tại sao bị conflict sau squash and merge?)**
 Workflow bạn mô tả có vẻ đúng, nhưng có một "lỗ hổng" phổ biến dẫn đến conflict. Hãy phân tích từng bước và lý do:

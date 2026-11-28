@@ -70,6 +70,33 @@ describe('AdminNavbar auth sync', () => {
     expect(screen.getByText('Admin')).toBeInTheDocument();
   });
 
+  test('shows Test activity in the desktop teacher navbar without exposing Admin', async () => {
+    const originalWidth = window.innerWidth;
+    window.innerWidth = 1280;
+    getStoredUser.mockReturnValue({
+      id: 15,
+      name: 'Teacher',
+      role: 'teacher',
+      canManageTests: true,
+    });
+
+    const { unmount } = render(
+      <MemoryRouter initialEntries={['/admin/display-settings']}>
+        <AdminNavbar />
+      </MemoryRouter>
+    );
+
+    try {
+      const link = await screen.findByRole('link', { name: 'Test activity' });
+      expect(link).toHaveAttribute('href', '/admin/display-settings');
+      expect(link).toHaveAttribute('aria-current', 'page');
+      expect(screen.queryByText('Admin')).not.toBeInTheDocument();
+    } finally {
+      unmount();
+      window.innerWidth = originalWidth;
+    }
+  });
+
   test('shows Prepare navigation even when the active exam-level list does not include it', async () => {
     getStoredUser.mockReturnValue({
       id: 8,
@@ -187,6 +214,9 @@ describe('AdminNavbar auth sync', () => {
         expect(within(drawer).getByRole('button', { name: section })).toBeInTheDocument();
       }
 
+      expect(
+        within(drawer).getByRole('link', { name: /Test activity/ })
+      ).toHaveAttribute('href', '/admin/display-settings');
       expect(within(drawer).queryByRole('button', { name: 'Admin' })).not.toBeInTheDocument();
       const progressReportsToggle = within(drawer).getByRole('button', {
         name: /Progress Reports/,

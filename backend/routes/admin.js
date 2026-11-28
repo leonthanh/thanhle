@@ -30,6 +30,18 @@ const { normalizeAttemptLimit } = require('../utils/attemptLimit');
 const VIETNAM_TIMEZONE = 'Asia/Ho_Chi_Minh';
 const VIETNAM_OFFSET_MINUTES = 7 * 60;
 const LIVE_ACTIVITY_WINDOW_MINUTES = 15;
+const CAMBRIDGE_LEVEL_KEYS = ['ket', 'pet', 'flyers', 'movers', 'starters'];
+
+const getCambridgeLevelKey = (testType) => {
+  const levelKey = String(testType || '').trim().toLowerCase().split('-')[0];
+  return CAMBRIDGE_LEVEL_KEYS.includes(levelKey) ? levelKey : null;
+};
+
+const createCambridgeLevelCounts = () =>
+  Object.fromEntries(CAMBRIDGE_LEVEL_KEYS.map((levelKey) => [levelKey, 0]));
+
+const createCambridgeLevelSets = () =>
+  Object.fromEntries(CAMBRIDGE_LEVEL_KEYS.map((levelKey) => [levelKey, new Set()]));
 
 const toPlain = (record) => (record && typeof record.toJSON === 'function' ? record.toJSON() : record);
 
@@ -661,8 +673,8 @@ router.get('/users/duplicates', requireAuth, requireRole('admin'), async (req, r
   }
 });
 
-// GET /api/admin/usage-overview — lightweight usage snapshot for admin decision-making
-router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, res) => {
+// GET /api/admin/usage-overview — lightweight usage snapshot for staff decision-making
+router.get('/usage-overview', requireAuth, requireRole('admin', 'teacher'), async (_req, res) => {
   try {
     const now = new Date();
     const liveWindowStart = new Date(now.getTime() - LIVE_ACTIVITY_WINDOW_MINUTES * 60 * 1000);
@@ -745,7 +757,7 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
       }),
       CambridgeSubmission.findAll({
         where: liveRuntimeWhere,
-        attributes: ['id', 'userId', 'studentPhone', 'studentName'],
+        attributes: ['id', 'userId', 'studentPhone', 'studentName', 'testType'],
         raw: true,
       }),
       GatewaySubmission.findAll({
@@ -790,7 +802,7 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
       }),
       CambridgeSubmission.findAll({
         where: monthActivityWhere,
-        attributes: ['id', 'userId', 'studentPhone', 'studentName', 'finished', 'createdAt', 'updatedAt'],
+        attributes: ['id', 'userId', 'studentPhone', 'studentName', 'testType', 'finished', 'createdAt', 'updatedAt'],
         raw: true,
       }),
       GatewaySubmission.findAll({
@@ -939,27 +951,46 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
     const monthSubmitters = new Set();
     const todayUsersByType = {};
     const monthUsersByType = {};
+    const todayCambridgeUsersByLevel = createCambridgeLevelSets();
+    const monthCambridgeUsersByLevel = createCambridgeLevelSets();
+    const todayCambridgeSubmissionsByLevel = createCambridgeLevelCounts();
+    const monthCambridgeSubmissionsByLevel = createCambridgeLevelCounts();
     activityGroups.forEach(({ key, records, fallbackPrefix, isSubmitted, getSubmissionDate }) => {
       const usersTodayByType = new Set();
       const usersMonthByType = new Set();
       (Array.isArray(records) ? records : []).forEach((record) => {
         const identity = buildIdentityKey(record, fallbackPrefix);
+        const cambridgeLevelKey = key === 'cambridge'
+          ? getCambridgeLevelKey(record?.testType)
+          : null;
         if (isDateInRange(record?.updatedAt, monthStart, now)) {
           monthUsers.add(identity);
           usersMonthByType.add(identity);
+          if (cambridgeLevelKey) {
+            monthCambridgeUsersByLevel[cambridgeLevelKey].add(identity);
+          }
         }
         if (isDateInRange(record?.updatedAt, todayStart, todayEnd)) {
           todayUsers.add(identity);
           usersTodayByType.add(identity);
+          if (cambridgeLevelKey) {
+            todayCambridgeUsersByLevel[cambridgeLevelKey].add(identity);
+          }
         }
 
         if (!isSubmitted(record)) return;
         const submissionDate = getSubmissionDate(record);
         if (isDateInRange(submissionDate, monthStart, now)) {
           monthSubmitters.add(identity);
+          if (cambridgeLevelKey) {
+            monthCambridgeSubmissionsByLevel[cambridgeLevelKey] += 1;
+          }
         }
         if (isDateInRange(submissionDate, todayStart, todayEnd)) {
           todaySubmitters.add(identity);
+          if (cambridgeLevelKey) {
+            todayCambridgeSubmissionsByLevel[cambridgeLevelKey] += 1;
+          }
         }
       });
       todayUsersByType[key] = usersTodayByType.size;
@@ -996,6 +1027,13 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
       general: countRows(liveGeneralSessions),
       prepare: countRows(livePrepareSessions),
     };
+    const liveCambridgeSessionsByLevel = createCambridgeLevelCounts();
+    (Array.isArray(liveCambridgeSessions) ? liveCambridgeSessions : []).forEach((record) => {
+      const levelKey = getCambridgeLevelKey(record?.testType);
+      if (levelKey) {
+        liveCambridgeSessionsByLevel[levelKey] += 1;
+      }
+    });
 
     const submissionsByType = {
       writing: Number(todayWritingSubmissions || 0),
@@ -1038,15 +1076,20 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
         activeVisitors: liveVisitors.size,
         activityWindowMinutes: LIVE_ACTIVITY_WINDOW_MINUTES,
         sessionsByType: liveSessionsByType,
+        cambridgeSessionsByLevel: liveCambridgeSessionsByLevel,
       },
       today: {
         date: dateLabel,
         activeUsers: todayVisitors.size,
         usersInTests: todayUsers.size,
         usersByType: todayUsersByType,
+        cambridgeUsersByLevel: Object.fromEntries(
+          CAMBRIDGE_LEVEL_KEYS.map((levelKey) => [levelKey, todayCambridgeUsersByLevel[levelKey].size])
+        ),
         submitters: todaySubmitters.size,
         submissions: todaySubmissionTotal,
         submissionsByType,
+        cambridgeSubmissionsByLevel: todayCambridgeSubmissionsByLevel,
         pageViews: todayPageViews,
         heartbeats: todayHeartbeats,
         newStudentAccounts: Number(todayNewStudents || 0),
@@ -1055,9 +1098,13 @@ router.get('/usage-overview', requireAuth, requireRole('admin'), async (_req, re
         date: monthLabel,
         usersInTests: monthUsers.size,
         usersByType: monthUsersByType,
+        cambridgeUsersByLevel: Object.fromEntries(
+          CAMBRIDGE_LEVEL_KEYS.map((levelKey) => [levelKey, monthCambridgeUsersByLevel[levelKey].size])
+        ),
         submitters: monthSubmitters.size,
         submissions: monthSubmissionTotal,
         submissionsByType: monthSubmissionsByType,
+        cambridgeSubmissionsByLevel: monthCambridgeSubmissionsByLevel,
       },
     });
   } catch (err) {

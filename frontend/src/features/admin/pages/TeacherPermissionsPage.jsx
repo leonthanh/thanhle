@@ -197,11 +197,21 @@ const TeacherPermissionsPage = () => {
           description="Control which teachers can manage Reading, Listening, and Orange tests from one sticky sidebar."
           sidebarContent={(
             <>
-              <AdminSidebarPanel eyebrow="Admin settings" title="Access pages" meta="Quick switch">
+              <AdminSidebarPanel
+                eyebrow="Admin settings"
+                title="Access pages"
+                meta="Quick switch"
+                className="admin-side-layout__panel--access"
+              >
                 <AdminSidebarNavList items={workspaceLinks} ariaLabel="Admin workspace pages" />
               </AdminSidebarPanel>
 
-              <AdminSidebarPanel eyebrow="Summary" title="Access status" meta={saving ? 'Saving' : 'Ready'}>
+              <AdminSidebarPanel
+                eyebrow="Summary"
+                title="Access status"
+                meta={saving ? 'Saving' : 'Ready'}
+                className="admin-side-layout__panel--compact"
+              >
                 <AdminSidebarMetricList items={sidebarStats} />
                 <p className="admin-side-layout__panelText">
                   Enable Test Management to let a teacher create, edit, and maintain tests across the exam library.

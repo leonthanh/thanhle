@@ -434,6 +434,125 @@ body.dark-mode .admin-side-layout__metricCard {
     border-radius: 20px;
   }
 
+  .admin-side-layout__panel--access {
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 16px;
+  }
+
+  .admin-side-layout__panel--access .admin-side-layout__panelHeader {
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .admin-side-layout__panel--access .admin-side-layout__panelEyebrow {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+  }
+
+  .admin-side-layout__panel--access .admin-side-layout__panelTitle {
+    font-size: 0.86rem;
+  }
+
+  .admin-side-layout__panel--access .admin-side-layout__panelMeta {
+    font-size: 0.6rem;
+  }
+
+  .admin-side-layout__panel--access .admin-side-layout__nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .admin-side-layout__panel--access .admin-side-layout__navButton {
+    min-height: 46px;
+    padding: 8px 9px;
+    gap: 6px;
+    border-radius: 12px;
+  }
+
+  .admin-side-layout__panel--access .admin-side-layout__navButtonCopy {
+    gap: 2px;
+  }
+
+  .admin-side-layout__panel--access .admin-side-layout__navButtonLabel {
+    font-size: 0.82rem;
+  }
+
+  .admin-side-layout__panel--access .admin-side-layout__navButtonHint {
+    font-size: 0.64rem;
+    line-height: 1.2;
+  }
+
+  .admin-side-layout__panel--compact {
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 16px;
+  }
+
+  .admin-side-layout__panel--compact .admin-side-layout__panelHeader {
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .admin-side-layout__panel--compact .admin-side-layout__panelEyebrow {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+  }
+
+  .admin-side-layout__panel--compact .admin-side-layout__panelTitle {
+    font-size: 0.86rem;
+  }
+
+  .admin-side-layout__panel--compact .admin-side-layout__panelMeta {
+    font-size: 0.6rem;
+  }
+
+  .admin-side-layout__panel--compact .admin-side-layout__nav,
+  .admin-side-layout__panel--compact .admin-side-layout__metricGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .admin-side-layout__panel--compact .admin-side-layout__navButton {
+    min-height: 46px;
+    padding: 8px 9px;
+    gap: 6px;
+    border-radius: 12px;
+  }
+
+  .admin-side-layout__panel--compact .admin-side-layout__navButtonCopy {
+    gap: 2px;
+  }
+
+  .admin-side-layout__panel--compact .admin-side-layout__navButtonLabel {
+    font-size: 0.82rem;
+  }
+
+  .admin-side-layout__panel--compact .admin-side-layout__navButtonHint {
+    font-size: 0.64rem;
+    line-height: 1.2;
+  }
+
+  .admin-side-layout__panel--compact .admin-side-layout__metricCard {
+    padding: 7px;
+    border-radius: 12px;
+  }
+
+  .admin-side-layout__panel--compact .admin-side-layout__metricValue {
+    font-size: 1rem;
+  }
+
+  .admin-side-layout__panel--compact .admin-side-layout__metricLabel {
+    margin-top: 3px;
+    font-size: 0.58rem;
+    line-height: 1.2;
+  }
+
+  .admin-side-layout__panel--compact .admin-side-layout__panelText {
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
   .admin-side-layout__metricGrid {
     grid-template-columns: 1fr 1fr;
   }
