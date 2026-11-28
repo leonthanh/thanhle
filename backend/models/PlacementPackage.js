@@ -21,7 +21,6 @@ const PlacementPackage = sequelize.define(
     shareToken: {
       type: DataTypes.STRING(80),
       allowNull: false,
-      unique: true,
     },
     isActive: {
       type: DataTypes.BOOLEAN,

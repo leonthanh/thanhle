@@ -20,7 +20,6 @@ const PlacementAttemptItem = sequelize.define(
     attemptItemToken: {
       type: DataTypes.STRING(80),
       allowNull: false,
-      unique: true,
     },
     platform: {
       type: DataTypes.STRING(20),
