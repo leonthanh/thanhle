@@ -1898,11 +1898,21 @@ const AdminUserManagement = () => {
           description="Switch between account, submission, test, and duplicate tools from a sticky sidebar while keeping the active workspace open on the right."
           sidebarContent={(
             <>
-              <AdminSidebarPanel eyebrow="Admin settings" title="Access pages" meta="Quick switch">
+              <AdminSidebarPanel
+                eyebrow="Admin settings"
+                title="Access pages"
+                meta="Quick switch"
+                className="admin-side-layout__panel--access"
+              >
                 <AdminSidebarNavList items={workspaceLinks} ariaLabel="Admin workspace pages" />
               </AdminSidebarPanel>
 
-              <AdminSidebarPanel eyebrow="Mode" title="Management tools" meta={activeTabLabel}>
+              <AdminSidebarPanel
+                eyebrow="Mode"
+                title="Management tools"
+                meta={activeTabLabel}
+                className="admin-side-layout__panel--compact"
+              >
                 <AdminSidebarNavList items={managementLinks} ariaLabel="Admin user management tabs" />
               </AdminSidebarPanel>
             </>

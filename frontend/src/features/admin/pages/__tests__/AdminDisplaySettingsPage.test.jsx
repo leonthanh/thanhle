@@ -1,8 +1,13 @@
 import React from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import AdminDisplaySettingsPage from "../AdminDisplaySettingsPage";
 
 jest.mock("../../../../shared/components/AdminNavbar", () => () => null);
+jest.mock("../../../../shared/utils/permissions", () => ({
+  getCurrentUser: () => ({ role: "teacher" }),
+  isAdmin: (user) => user?.role === "admin",
+}));
 jest.mock("../../../../shared/utils/api", () => ({
   apiPath: (path) => path,
   authFetch: jest.fn(),
@@ -69,10 +74,17 @@ describe("AdminDisplaySettingsPage", () => {
   });
 
   test("switches between daily and monthly learner and submission counts", async () => {
-    render(<AdminDisplaySettingsPage />);
+    render(
+      <MemoryRouter>
+        <AdminDisplaySettingsPage />
+      </MemoryRouter>
+    );
 
     expect(screen.getByText("IX core skills")).toBeInTheDocument();
     expect(screen.getByText("Programs & learning tracks")).toBeInTheDocument();
+    const accessPages = screen.getByRole("navigation", { name: "Admin workspace pages" });
+    expect(within(accessPages).getByRole("button", { name: /Test Activity/ })).toBeInTheDocument();
+    expect(within(accessPages).queryByRole("button", { name: /Runtime sync/ })).not.toBeInTheDocument();
 
     const ketRow = screen.getByRole("row", { name: /^KET/ });
     expect(await within(ketRow).findAllByText("1")).toHaveLength(3);

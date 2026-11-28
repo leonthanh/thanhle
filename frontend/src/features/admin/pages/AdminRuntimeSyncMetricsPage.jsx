@@ -148,10 +148,20 @@ const AdminRuntimeSyncMetricsPage = () => {
           description="Live client-side telemetry for autosave/active runtime endpoints."
           sidebarContent={(
             <>
-              <AdminSidebarPanel eyebrow="Admin settings" title="Access pages" meta="Quick switch">
+              <AdminSidebarPanel
+                eyebrow="Admin settings"
+                title="Access pages"
+                meta="Quick switch"
+                className="admin-side-layout__panel--access"
+              >
                 <AdminSidebarNavList items={workspaceLinks} ariaLabel="Admin workspace pages" />
               </AdminSidebarPanel>
-              <AdminSidebarPanel eyebrow="Window" title={`Last ${getRecentWindowLabel(recentMinutes)}`} meta={formatDateTime(snapshot?.updatedAt)}>
+              <AdminSidebarPanel
+                eyebrow="Window"
+                title={`Last ${getRecentWindowLabel(recentMinutes)}`}
+                meta={formatDateTime(snapshot?.updatedAt)}
+                className="admin-side-layout__panel--compact"
+              >
                 <AdminSidebarMetricList items={sidebarMetrics} />
                 <p className="admin-side-layout__panelText">
                   Metrics are stored in browser localStorage for this admin device only.

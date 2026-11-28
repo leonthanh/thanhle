@@ -93,8 +93,7 @@ const buildBaseWorkspaceLinks = (navigate, currentKey, displayLabels) => {
   ];
 };
 
-const buildAdminOnlyWorkspaceLinks = (navigate, currentKey) => [
-  {
+const buildTestActivityWorkspaceLink = (navigate, currentKey) => ({
     key: "display-settings",
     label: "Test Activity",
     hint: "Usage overview",
@@ -102,7 +101,10 @@ const buildAdminOnlyWorkspaceLinks = (navigate, currentKey) => [
     to: "/admin/display-settings",
     active: currentKey === "display-settings",
     onClick: () => navigate("/admin/display-settings"),
-  },
+  });
+
+const buildAdminOnlyWorkspaceLinks = (navigate, currentKey) => [
+  buildTestActivityWorkspaceLink(navigate, currentKey),
   {
     key: "runtime-sync-metrics",
     label: "Runtime sync",
@@ -150,10 +152,16 @@ export const buildAdminWorkspaceLinks = (
   const includeAdminLinks =
     isAdmin(currentUser) &&
     (group === WORKSPACE_LINK_GROUPS.all || group === WORKSPACE_LINK_GROUPS.admin);
+  const includeTeacherActivityLink =
+    currentUser?.role === "teacher" && group === WORKSPACE_LINK_GROUPS.admin;
 
   return [
     ...(includeBaseLinks ? buildBaseWorkspaceLinks(navigate, currentKey, displayLabels) : []),
-    ...(includeAdminLinks ? buildAdminOnlyWorkspaceLinks(navigate, currentKey) : []),
+    ...(includeAdminLinks
+      ? buildAdminOnlyWorkspaceLinks(navigate, currentKey)
+      : includeTeacherActivityLink
+      ? [buildTestActivityWorkspaceLink(navigate, currentKey)]
+      : []),
   ];
 };
 
@@ -643,8 +651,8 @@ export const AdminSidebarNavList = ({ items = [], ariaLabel = "Admin navigation"
   );
 };
 
-export const AdminSidebarPanel = ({ eyebrow, title, meta, children }) => (
-  <section className="admin-side-layout__panel">
+export const AdminSidebarPanel = ({ eyebrow, title, meta, className = "", children }) => (
+  <section className={["admin-side-layout__panel", className].filter(Boolean).join(" ")}>
     {eyebrow || title || meta ? (
       <div className="admin-side-layout__panelHeader">
         <div style={{ display: "grid", gap: 4 }}>

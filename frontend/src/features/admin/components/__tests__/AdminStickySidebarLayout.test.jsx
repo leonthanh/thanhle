@@ -30,6 +30,28 @@ describe("buildAdminWorkspaceLinks", () => {
     ]);
   });
 
+  test("keeps Test Activity in the admin quick switch for teachers only", () => {
+    const navigate = jest.fn();
+    const links = buildAdminWorkspaceLinks(
+      navigate,
+      "display-settings",
+      { role: "teacher" },
+      "admin"
+    );
+
+    expect(links.map((item) => item.key)).toEqual(["display-settings"]);
+    expect(links[0].active).toBe(true);
+
+    render(
+      <AdminSidebarNavList
+        items={links}
+        ariaLabel="Admin workspace pages"
+      />
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Test Activity/ }));
+    expect(navigate).toHaveBeenCalledWith("/admin/display-settings");
+  });
+
   test("includes admin-only links for admins", () => {
     const links = buildAdminWorkspaceLinks(jest.fn(), "permissions", {
       role: "admin",

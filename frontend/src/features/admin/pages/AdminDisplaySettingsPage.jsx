@@ -1,9 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminNavbar from "../../../shared/components/AdminNavbar";
 import { apiPath, authFetch } from "../../../shared/utils/api";
 import { useTheme } from "../../../shared/contexts/ThemeContext";
 import { useDisplaySettings } from "../../../shared/contexts/DisplaySettingsContext";
 import { ORANGE_LEVELS } from "../../../domains/cambridge/config/levels";
+import AdminStickySidebarLayout, {
+  AdminSidebarNavList,
+  AdminSidebarPanel,
+  buildAdminWorkspaceLinks,
+} from "../components/AdminStickySidebarLayout";
 
 const formatCount = (value, available, loading) => {
   if (!available) return loading ? "..." : "-";
@@ -11,6 +17,7 @@ const formatCount = (value, available, loading) => {
 };
 
 const AdminDisplaySettingsPage = () => {
+  const navigate = useNavigate();
   const { isDarkMode } = useTheme();
   const { displayLabels } = useDisplaySettings();
 
@@ -20,6 +27,10 @@ const AdminDisplaySettingsPage = () => {
   const [period, setPeriod] = useState("today");
 
   const styles = useMemo(() => getStyles(isDarkMode), [isDarkMode]);
+  const workspaceLinks = useMemo(
+    () => buildAdminWorkspaceLinks(navigate, "display-settings", undefined, "admin", displayLabels),
+    [displayLabels, navigate]
+  );
 
   const fetchUsageOverview = useCallback(async () => {
     try {
@@ -177,34 +188,46 @@ const AdminDisplaySettingsPage = () => {
     <>
       <AdminNavbar />
       <div className="admin-page admin-submission-page" style={styles.page}>
-        <header style={styles.pageHeader}>
-          <div style={styles.heroCopy}>
-            <div style={styles.eyebrowRow}>
-              <span aria-hidden="true" style={styles.eyebrowMark} />
-              <p style={styles.pageEyebrow}>ADMIN ANALYTICS</p>
-            </div>
-            <h1 style={styles.pageTitle}>Test activity</h1>
-            <p style={styles.pageDescription}>
-              Monitor active learners, test attempts, and submissions across your learning programs.
-            </p>
-          </div>
-          <div style={styles.headerActions}>
-            <span style={styles.windowBadge}>
-              <span aria-hidden="true" style={styles.windowBadgeDot} />
-              Activity window · {liveWindowMinutes} min
-            </span>
-            <button
-              type="button"
-              onClick={fetchUsageOverview}
-              disabled={usageLoading}
-              style={{ ...styles.button, ...styles.refreshButton, ...(usageLoading ? styles.disabledButton : null) }}
+        <AdminStickySidebarLayout
+          sidebarContent={(
+            <AdminSidebarPanel
+              eyebrow="Admin settings"
+              title="Access pages"
+              meta="Quick switch"
+              className="admin-side-layout__panel--access"
             >
-              {usageLoading ? "Refreshing…" : "Refresh data"}
-            </button>
-          </div>
-        </header>
+              <AdminSidebarNavList items={workspaceLinks} ariaLabel="Admin workspace pages" />
+            </AdminSidebarPanel>
+          )}
+        >
+          <header style={styles.pageHeader}>
+            <div style={styles.heroCopy}>
+              <div style={styles.eyebrowRow}>
+                <span aria-hidden="true" style={styles.eyebrowMark} />
+                <p style={styles.pageEyebrow}>ADMIN ANALYTICS</p>
+              </div>
+              <h1 style={styles.pageTitle}>Test activity</h1>
+              <p style={styles.pageDescription}>
+                Monitor active learners, test attempts, and submissions across your learning programs.
+              </p>
+            </div>
+            <div style={styles.headerActions}>
+              <span style={styles.windowBadge}>
+                <span aria-hidden="true" style={styles.windowBadgeDot} />
+                Activity window · {liveWindowMinutes} min
+              </span>
+              <button
+                type="button"
+                onClick={fetchUsageOverview}
+                disabled={usageLoading}
+                style={{ ...styles.button, ...styles.refreshButton, ...(usageLoading ? styles.disabledButton : null) }}
+              >
+                {usageLoading ? "Refreshing…" : "Refresh data"}
+              </button>
+            </div>
+          </header>
 
-        <section style={styles.overviewPanel}>
+          <section style={styles.overviewPanel}>
           <div style={styles.overviewHeader}>
             <div>
               <p style={styles.sectionEyebrow}>ACTIVITY OVERVIEW</p>
@@ -353,6 +376,12 @@ const AdminDisplaySettingsPage = () => {
 
             <div style={styles.tableScroller}>
               <table style={styles.table}>
+                <colgroup>
+                  <col style={styles.testTypeColumn} />
+                  <col style={styles.metricColumn} />
+                  <col style={styles.metricColumn} />
+                  <col style={styles.metricColumn} />
+                </colgroup>
                 <thead>
                   <tr>
                     <th scope="col" style={styles.tableHeading}>Test type</th>
@@ -466,7 +495,8 @@ const AdminDisplaySettingsPage = () => {
               {" "}{orangeLabel} totals include all levels; a learner taking multiple levels can appear in more than one child row.
             </p>
           </div>
-        </section>
+          </section>
+        </AdminStickySidebarLayout>
       </div>
     </>
   );
@@ -548,10 +578,10 @@ const getStyles = (isDarkMode) => {
       alignItems: "center",
       justifyContent: "space-between",
       flexWrap: "wrap",
-      gap: 20,
-      padding: "clamp(20px, 3vw, 32px)",
+      gap: "clamp(10px, 2vw, 20px)",
+      padding: "clamp(12px, 3vw, 32px)",
       border: `1px solid ${colors.border}`,
-      borderRadius: 22,
+      borderRadius: "clamp(16px, 2vw, 22px)",
       background: isDarkMode
         ? "linear-gradient(125deg, rgba(15, 23, 42, 0.98) 0%, rgba(17, 40, 70, 0.96) 100%)"
         : "linear-gradient(125deg, #ffffff 0%, #eff6ff 100%)",
@@ -561,7 +591,7 @@ const getStyles = (isDarkMode) => {
     },
     heroCopy: {
       display: "grid",
-      gap: 8,
+      gap: "clamp(4px, 1vw, 8px)",
       minWidth: 0,
       flex: "1 1 420px",
     },
@@ -588,7 +618,7 @@ const getStyles = (isDarkMode) => {
     pageTitle: {
       margin: 0,
       color: colors.text,
-      fontSize: "clamp(1.75rem, 3vw, 2.3rem)",
+      fontSize: "clamp(1.5rem, 3vw, 2.3rem)",
       fontWeight: 800,
       letterSpacing: "-0.035em",
       lineHeight: 1.1,
@@ -597,7 +627,7 @@ const getStyles = (isDarkMode) => {
       maxWidth: 680,
       margin: 0,
       color: colors.muted,
-      fontSize: 14,
+      fontSize: "clamp(12px, 1.3vw, 14px)",
       lineHeight: 1.65,
     },
     headerActions: {
@@ -605,20 +635,20 @@ const getStyles = (isDarkMode) => {
       alignItems: "center",
       justifyContent: "flex-end",
       flexWrap: "wrap",
-      gap: 10,
+      gap: "clamp(6px, 1vw, 10px)",
       flex: "0 1 auto",
     },
     windowBadge: {
       display: "inline-flex",
       alignItems: "center",
       gap: 8,
-      minHeight: 38,
-      padding: "0 12px",
+      minHeight: "clamp(32px, 3.5vw, 38px)",
+      padding: "0 clamp(8px, 1vw, 12px)",
       border: `1px solid ${tones.blue.border}`,
       borderRadius: 999,
       background: tones.blue.soft,
       color: tones.blue.text,
-      fontSize: 12,
+      fontSize: "clamp(10px, 1vw, 12px)",
       fontWeight: 700,
       whiteSpace: "nowrap",
     },
@@ -667,10 +697,10 @@ const getStyles = (isDarkMode) => {
       lineHeight: 1.55,
     },
     button: {
-      minHeight: 40,
+      minHeight: "clamp(34px, 3.5vw, 40px)",
       borderRadius: 11,
-      padding: "0 15px",
-      fontSize: 13,
+      padding: "0 clamp(10px, 1.25vw, 15px)",
+      fontSize: "clamp(11px, 1.1vw, 13px)",
       fontWeight: 750,
       cursor: "pointer",
       transition: "transform 120ms ease, box-shadow 120ms ease, background 120ms ease",
@@ -883,65 +913,79 @@ const getStyles = (isDarkMode) => {
     },
     table: {
       width: "100%",
-      minWidth: 700,
+      minWidth: 0,
+      tableLayout: "fixed",
       borderCollapse: "collapse",
       textAlign: "left",
     },
+    testTypeColumn: {
+      width: "36%",
+    },
+    metricColumn: {
+      width: "21.333%",
+    },
     tableHeading: {
-      padding: "13px 14px",
+      padding: "11px 8px",
       borderBottom: `1px solid ${colors.border}`,
       background: isDarkMode ? "#172337" : "#f1f5f9",
       color: colors.muted,
       fontSize: 11,
       fontWeight: 800,
       lineHeight: 1.4,
-      whiteSpace: "nowrap",
+      whiteSpace: "normal",
+      overflowWrap: "anywhere",
     },
     groupHeading: {
-      padding: "11px 14px",
+      padding: "10px 10px",
       borderBottom: `1px solid ${colors.border}`,
       textAlign: "left",
       fontSize: 12,
       fontWeight: 850,
-      whiteSpace: "nowrap",
+      whiteSpace: "normal",
+      overflowWrap: "anywhere",
     },
     groupHeadingMarker: {
       display: "inline-block",
       width: 8,
       height: 8,
-      marginRight: 9,
+      marginRight: 7,
       borderRadius: 3,
       verticalAlign: "1px",
     },
     groupDescription: {
-      marginLeft: 10,
+      marginLeft: 8,
       color: colors.muted,
       fontSize: 11,
       fontWeight: 550,
     },
     tableRowHeading: {
-      padding: "12px 14px",
+      padding: "10px 8px",
       borderBottom: `1px solid ${colors.border}`,
       color: colors.text,
-      fontSize: 13,
+      fontSize: 12,
       fontWeight: 700,
-      whiteSpace: "nowrap",
+      whiteSpace: "normal",
+      overflowWrap: "anywhere",
     },
     testTypeBadge: {
       display: "inline-flex",
       alignItems: "center",
+      flexWrap: "wrap",
       gap: 8,
       minHeight: 28,
-      padding: "0 9px",
+      maxWidth: "100%",
+      minWidth: 0,
+      padding: "0 7px",
       border: "1px solid transparent",
       borderRadius: 8,
       fontSize: 11,
       fontWeight: 750,
     },
     sublevelBadge: {
-      marginLeft: 22,
-      minHeight: 26,
-      fontSize: 10.5,
+      marginLeft: 14,
+      minHeight: 25,
+      gap: 6,
+      fontSize: 10,
       fontWeight: 700,
     },
     sublevelConnector: {
@@ -969,7 +1013,7 @@ const getStyles = (isDarkMode) => {
       borderRadius: 999,
     },
     tableCell: {
-      padding: "11px 14px",
+      padding: "9px 6px",
       borderBottom: `1px solid ${colors.border}`,
       color: colors.text,
       fontSize: 12,
@@ -982,12 +1026,12 @@ const getStyles = (isDarkMode) => {
       display: "inline-flex",
       alignItems: "center",
       justifyContent: "center",
-      minWidth: 42,
-      minHeight: 27,
-      padding: "0 9px",
+      minWidth: 34,
+      minHeight: 25,
+      padding: "0 6px",
       border: "1px solid transparent",
       borderRadius: 8,
-      fontSize: 12,
+      fontSize: 11,
       fontWeight: 800,
       fontVariantNumeric: "tabular-nums",
     },
