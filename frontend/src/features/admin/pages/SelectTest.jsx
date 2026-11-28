@@ -1847,13 +1847,14 @@ const SelectTest = () => {
                       ) : currentContext.isPrepare ? (
                         visibleList.map((test, index) => {
                           const title = test.title || `Prepare ${currentSkillInfo.label}`;
+                          const hideTestTitle = activePrepareTab === "reading-writing";
                           const placementSelection = createPlacementSelection({
                             platform: "exam-level",
                             levelCode: "prepare",
                             skill: activePrepareTab,
                             testId: test.id,
                             testType: test.testType,
-                            title,
+                            title: hideTestTitle ? test.classCode || title : title,
                             badge: "Prepare",
                             questionsLabel: `${test.totalQuestions || 0} questions`,
                             durationLabel: `${test.duration || 0} min`,
@@ -1889,7 +1890,7 @@ const SelectTest = () => {
                                   </span>
                                 </div>
 
-                                <h3 className="select-test-cardTitle">{title}</h3>
+                                {!hideTestTitle && <h3 className="select-test-cardTitle">{title}</h3>}
                                 <div className="select-test-cardMeta select-test-cardMeta--grid">
                                   <span className="select-test-chip">{test.classCode || "No class"}</span>
                                   <span className="select-test-cardPill">

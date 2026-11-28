@@ -20,7 +20,6 @@ const PlacementAttempt = sequelize.define(
     attemptToken: {
       type: DataTypes.STRING(80),
       allowNull: false,
-      unique: true,
     },
     studentName: {
       type: DataTypes.STRING(160),
